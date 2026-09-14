@@ -4,7 +4,7 @@ import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, runTransaction, serverTimestamp, setDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { firebaseConfigured, getFirebase } from '@/lib/firebase';
+import { firebaseConfigured, getFirebase } from '../../lib/firebase';
 import { useRouter } from 'next/navigation';
 import styles from './profile.module.css';
 
