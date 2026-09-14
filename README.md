@@ -7,12 +7,10 @@ STUKO is an interest-first, all-in-one study workspace. The first milestone is a
 ## Current milestone
 - Laptop-first ChatGPT-style left sidebar
 - Dashboard landing page
-- Personal profile card and study statistics
-- Activity heatmap and streak tracking UI
-- Interest-based study analytics
-- Library status overview
-- Recently studied list
-- Dynamic public profile route at `/u/[username]`
+- Google authentication and profile onboarding
+- Personal profile editing with profile-picture uploads
+- Public profile route at `/u/[username]`
+- Wall-first public profile navigation
 - Responsive mobile fallback
 
 ## Product direction
@@ -28,11 +26,10 @@ npm run dev
 Then open `http://localhost:3000`.
 
 ## Next build phases
-1. Google authentication + account persistence
-2. Real user/profile database
-3. Public profile privacy controls + wall moderation
-4. Collections and study-library CRUD
-5. Planner, goals and study sessions
-6. Interest onboarding engine
-7. Theme system
-8. AI-assisted study tools and recommendation layer
+1. Real public wall posts and comments
+2. Follow system
+3. Collections and study-library CRUD
+4. Planner, goals and study sessions
+5. Interest onboarding engine
+6. Theme system
+7. AI-assisted study tools and recommendation layer
