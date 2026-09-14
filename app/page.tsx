@@ -1,0 +1,76 @@
+'use client';
+
+import { useState } from 'react';
+import { BookOpen, CalendarDays, Check, ChevronDown, Clock3, Compass, FolderHeart, Home, Library, Menu, MessageCircle, MoreHorizontal, Plus, Search, Settings, Sparkles, Target, Users, X } from 'lucide-react';
+
+const genres = [
+  ['Computer Science', 31], ['Cybersecurity', 22], ['History', 16], ['Mythology', 12], ['Art & Design', 9], ['Languages', 6],
+];
+const library = [['In progress', 8], ['Completed', 24], ['Saved', 11], ['Paused', 3]];
+
+export default function HomePage() {
+  const [activeTab, setActiveTab] = useState('Overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  return (
+    <main className="shell">
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="brand"><span className="brand-mark">S</span><span>STUKO</span></div>
+        <button className="new-btn"><Plus size={17}/> New study</button>
+        <nav>
+          <div className="nav-label">WORKSPACE</div>
+          <a className="nav-item active"><Home size={17}/> Home</a>
+          <a className="nav-item"><Compass size={17}/> Discover</a>
+          <a className="nav-item"><Library size={17}/> Library <span className="count">11</span></a>
+          <a className="nav-item"><CalendarDays size={17}/> Planner</a>
+          <a className="nav-item"><Target size={17}/> Goals</a>
+          <div className="nav-label spaced">COMMUNITY</div>
+          <a className="nav-item"><Users size={17}/> People</a>
+          <a className="nav-item"><MessageCircle size={17}/> Wall</a>
+          <div className="nav-label spaced">YOU</div>
+          <a className="nav-item"><FolderHeart size={17}/> Collections</a>
+        </nav>
+        <div className="sidebar-bottom">
+          <a className="nav-item"><Settings size={17}/> Settings</a>
+          <div className="mini-profile"><div className="avatar small">A</div><div><b>Anjani</b><span>@anjani</span></div><MoreHorizontal size={16}/></div>
+        </div>
+      </aside>
+
+      <section className="content">
+        <header className="topbar">
+          <button className="mobile-menu" onClick={() => setSidebarOpen(!sidebarOpen)}>{sidebarOpen ? <X/> : <Menu/>}</button>
+          <div className="search"><Search size={16}/><input placeholder="Search your universe..."/><kbd>⌘ K</kbd></div>
+          <div className="top-actions"><button className="icon-btn"><Clock3 size={18}/></button><button className="avatar">A</button></div>
+        </header>
+
+        <div className="page">
+          <div className="welcome-row"><div><p className="eyebrow">MONDAY, SEPTEMBER 14</p><h1>Good afternoon, Anjani <span>✦</span></h1><p className="sub">Your study universe, in one place.</p></div><button className="profile-link">View public profile <span>↗</span></button></div>
+
+          <div className="profile-card">
+            <div className="profile-main">
+              <div className="avatar profile-avatar">A</div>
+              <div className="profile-copy"><div className="name-line"><h2>ANJANI</h2><span className="online-dot"></span></div><p className="handle">@anjani · Joined Aug 2025</p><p className="bio">building things, collecting knowledge & romanticising the syllabus.</p>
+                <div className="stats"><span><b>4</b> followers</span><span><b>12</b> following</span><span><b>7</b> collections</span><span><b>36</b> sessions</span><span><b>1,284</b> chapters studied</span></div>
+              </div>
+            </div>
+            <button className="edit-profile">Edit profile</button>
+          </div>
+
+          <div className="tabs">{['Overview','Wall','Collections','Recent study','Stats'].map(tab => <button key={tab} className={activeTab===tab?'selected':''} onClick={()=>setActiveTab(tab)}>{tab}</button>)}</div>
+
+          <div className="grid">
+            <section className="panel activity-panel"><div className="panel-head"><div><h3>Study activity</h3><p>Little steps count.</p></div><button className="select">Last 30 days <ChevronDown size={14}/></button></div><div className="big-stat"><strong>36</strong><span>sessions this month</span><span className="up">↑ 18%</span></div><div className="heatmap">{Array.from({length: 84}).map((_,i)=><span key={i} className={`cell level-${(i*7+i%5)%5}`}></span>)}</div><div className="heat-label"><span>Less</span><i></i><i></i><i></i><i></i><span>More</span></div></section>
+            <section className="panel streak-panel"><div className="panel-head"><div><h3>Current streak</h3><p>Keep the chain alive.</p></div><Sparkles size={18}/></div><div className="streak"><strong>7</strong><span>days</span></div><div className="week">{['M','T','W','T','F','S','S'].map((d,i)=><div key={i} className={i<5?'done':''}><span>{i<5?<Check size={13}/>:''}</span><small>{d}</small></div>)}</div><p className="tiny">Best streak <b>12 days</b></p></section>
+
+            <section className="panel"><div className="panel-head"><div><h3>Top interests</h3><p>What your brain keeps coming back to.</p></div><button className="dots">•••</button></div><div className="bars">{genres.map(([g,n],i)=><div className="bar-row" key={g}><span>{g}</span><div className="bar"><i style={{width:`${Number(n)*2.45}%`}}></i></div><b>{n}%</b></div>)}</div></section>
+            <section className="panel"><div className="panel-head"><div><h3>Library</h3><p>Your knowledge shelf.</p></div><BookOpen size={18}/></div><div className="library-grid">{library.map(([name,n])=><div className="lib-item" key={name}><strong>{n}</strong><span>{name}</span></div>)}</div><button className="wide-btn">Open library <span>→</span></button></section>
+
+            <section className="panel wide"><div className="panel-head"><div><h3>Recently studied</h3><p>Your latest little victories.</p></div><button className="text-btn">See all →</button></div><div className="recent-list">{[['Data Structures','Trees & Graphs','48 min','CS'],['Ancient Egypt','The Book of the Dead','31 min','HM'],['Java','Interfaces & Polymorphism','52 min','JV']].map(([a,b,c,d])=><div className="recent" key={a}><div className="subject-icon">{d}</div><div className="recent-title"><b>{a}</b><span>{b}</span></div><span className="recent-time">{c}</span><span className="completed">Completed</span></div>)}</div></section>
+          </div>
+
+          <footer><span>STUKO · study, but make it yours.</span><span>Built around your interests, not against them.</span></footer>
+        </div>
+      </section>
+    </main>
+  );
+}
