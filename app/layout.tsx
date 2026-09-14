@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './comix.css';
 import ThemeProvider from './theme-provider';
 import ThemeMenu from './theme-menu';
 
