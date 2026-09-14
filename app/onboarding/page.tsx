@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { onAuthStateChanged, updatePassword } from 'firebase/auth';
 import { doc, getDoc, runTransaction, serverTimestamp } from 'firebase/firestore';
-import { firebaseConfigured, getFirebase } from '@/lib/firebase';
+import { firebaseConfigured, getFirebase } from '../../lib/firebase';
 import { useRouter } from 'next/navigation';
 import styles from './onboarding.module.css';
 
