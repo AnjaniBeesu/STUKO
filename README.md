@@ -12,6 +12,7 @@ STUKO is an interest-first, all-in-one study workspace. The first milestone is a
 - Public profile route at `/u/[username]`
 - Wall-first public profile navigation
 - Responsive mobile fallback
+- Vercel-ready production build
 
 ## Product direction
 The differentiator is **catering to interests**. Instead of treating studying as a generic productivity task, STUKO will eventually adapt the workspace, recommendations, organization and visual identity around what each learner actually loves.
