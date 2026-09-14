@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
-import { firebaseConfigured, getFirebase } from '@/lib/firebase';
+import { firebaseConfigured, getFirebase } from '../../../lib/firebase';
 import { MessageCircle, UserPlus } from 'lucide-react';
 import styles from './public.module.css';
 
