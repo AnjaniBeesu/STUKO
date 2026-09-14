@@ -1,0 +1,19 @@
+'use client';
+
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { firebaseConfigured, getFirebase } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
+import styles from './profile.module.css';
+
+type Profile={username:string;displayName:string;bio:string;photoURL:string;followersCount:number;followingCount:number};
+
+export default function ProfilePage(){
+ const router=useRouter();const [profile,setProfile]=useState<Profile>({username:'',displayName:'',bio:'',photoURL:'',followersCount:0,followingCount:0});const [uid,setUid]=useState('');const [saving,setSaving]=useState(false);const [uploading,setUploading]=useState(false);const [message,setMessage]=useState('');
+ useEffect(()=>{if(!firebaseConfigured()){setMessage('Firebase is not configured yet.');return;}const {auth,db}=getFirebase();return onAuthStateChanged(auth,async user=>{if(!user){router.replace('/auth');return;}setUid(user.uid);const snap=await getDoc(doc(db,'users',user.uid));if(!snap.exists()||!snap.data().username){router.replace('/onboarding');return;}setProfile(snap.data() as Profile);});},[router]);
+ async function save(e:FormEvent){e.preventDefault();setSaving(true);setMessage('');try{const {db}=getFirebase();await setDoc(doc(db,'users',uid),{displayName:profile.displayName.trim(),bio:profile.bio.trim(),updatedAt:serverTimestamp()},{merge:true});setMessage('Profile saved ✦');}catch(e){setMessage(e instanceof Error?e.message:'Could not save profile.');}finally{setSaving(false);}}
+ async function upload(e:ChangeEvent<HTMLInputElement>){const file=e.target.files?.[0];if(!file||!uid)return;if(file.size>5*1024*1024){setMessage('Keep your profile picture under 5 MB.');return;}setUploading(true);setMessage('');try{const {storage,db}=getFirebase();const imageRef=ref(storage,`profile-pictures/${uid}/${Date.now()}-${file.name}`);await uploadBytes(imageRef,file,{contentType:file.type});const url=await getDownloadURL(imageRef);await setDoc(doc(db,'users',uid),{photoURL:url,updatedAt:serverTimestamp()},{merge:true});setProfile(p=>({...p,photoURL:url}));setMessage('Profile picture updated ✦');}catch(e){setMessage(e instanceof Error?e.message:'Upload failed. Check Firebase Storage rules.');}finally{setUploading(false);}}
+ return <main className={styles.page}><div className={styles.wrap}><header><a href="/" className={styles.brand}>STUKO</a><a href={`/u/${profile.username}`} className={styles.public}>View public profile ↗</a></header><div className={styles.title}><p>YOUR PROFILE</p><h1>Make your corner of STUKO yours.</h1></div><section className={styles.card}><div className={styles.avatarWrap}><div className={styles.avatar}>{profile.photoURL?<img src={profile.photoURL} alt="Profile"/>:profile.displayName?.[0]?.toUpperCase()||'S'}</div><label className={styles.upload}>{uploading?'Uploading…':'Change picture'}<input type="file" accept="image/png,image/jpeg,image/webp" onChange={upload}/></label></div><form onSubmit={save}><label>Username <small>public · changing this changes your public profile URL</small><input value={profile.username} disabled/></label><label>Display name<input value={profile.displayName} onChange={e=>setProfile({...profile,displayName:e.target.value})} maxLength={60}/></label><label>Bio <small>{profile.bio.length}/160</small><textarea value={profile.bio} onChange={e=>setProfile({...profile,bio:e.target.value})} maxLength={160} placeholder="Tell people what you're into…"/></label><div className={styles.row}><button disabled={saving}>{saving?'Saving…':'Save changes'}</button><button type="button" className={styles.secondary} onClick={()=>router.push('/')}>Cancel</button></div>{message&&<p className={styles.message}>{message}</p>}</form></section></div></main>;
+}
