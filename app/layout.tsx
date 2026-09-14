@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import ThemeProvider from './theme-provider';
+import ThemeMenu from './theme-menu';
 
 export const metadata: Metadata = {
   title: 'STUKO — Study, but make it yours.',
@@ -8,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><ThemeProvider>{children}</ThemeProvider></body></html>;
+  return <html lang="en"><body><ThemeProvider>{children}<ThemeMenu /></ThemeProvider></body></html>;
 }
