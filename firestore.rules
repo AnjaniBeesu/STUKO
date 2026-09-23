@@ -13,7 +13,16 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if true;
-      allow create, update, delete: if isUser(userId);
+      allow create: if isUser(userId);
+      allow delete: if isUser(userId);
+      allow update: if isUser(userId) && (
+        request.resource.data.username == resource.data.username
+        || (
+          request.resource.data.usernameChangedAt == request.time
+          && (!resource.data.keys().hasAll(['usernameChangedAt'])
+            || request.time >= resource.data.usernameChangedAt + duration.value(365, 'd'))
+        )
+      );
     }
 
     match /usernames/{username} {
