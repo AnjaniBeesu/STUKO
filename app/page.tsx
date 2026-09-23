@@ -1,18 +1,117 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { BookOpen, CalendarDays, Check, ChevronDown, Clock3, Compass, FolderHeart, Home, Library, Menu, MessageCircle, MoreHorizontal, Plus, Search, Settings, Sparkles, Target, Users, X, Sun, Moon, Palette, Monitor } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { firebaseConfigured, getFirebase } from '@/lib/firebase';
-import { useTheme, ThemeName } from './theme-provider';
+import { BookOpen, Brain, Clock3, FileText, Layers3, Play, Sparkles, Trophy, Users, ArrowUpRight } from 'lucide-react';
 
-const genres=[['Computer Science',31],['Cybersecurity',22],['History',16],['Mythology',12],['Art & Design',9],['Languages',6]];const library=[['In progress',8],['Completed',24],['Saved',11],['Paused',3]];
-type Profile={username:string;displayName:string;bio:string;photoURL:string;followersCount:number;followingCount:number};
-const themes:{id:ThemeName;name:string;description:string;icon:typeof Sun}[]=[{id:'light',name:'Basic light',description:'White & black',icon:Sun},{id:'dark',name:'Basic dark',description:'Black & white',icon:Moon},{id:'system',name:'Default',description:'Use your system setting',icon:Monitor},{id:'pink',name:'Baby pink light',description:'Soft pastel & whimsical',icon:Sparkles},{id:'purple',name:'Purple dark',description:'Deep purple & light text',icon:Palette}];
-export default function HomePage(){
- const[activeTab,setActiveTab]=useState('Overview');const[sidebarOpen,setSidebarOpen]=useState(false);const[profile,setProfile]=useState<Profile|null>(null);const[loading,setLoading]=useState(true);const[settingsOpen,setSettingsOpen]=useState(false);const[themesOpen,setThemesOpen]=useState(false);const{theme,setTheme}=useTheme();
- useEffect(()=>{if(!firebaseConfigured()){window.location.href='/auth';return;}const {auth,db}=getFirebase();return onAuthStateChanged(auth,async user=>{if(!user){window.location.href='/auth';return;}const snap=await getDoc(doc(db,'users',user.uid));if(!snap.exists()||!snap.data().username){window.location.href='/onboarding';return;}setProfile(snap.data() as Profile);setLoading(false);});},[]);
- const displayName=profile?.displayName||'Student',username=profile?.username||'student',initial=displayName[0]?.toUpperCase()||'S',publicPath=`/u/${username}`;
- if(loading)return <main className="shell"><div style={{padding:'40px'}}>Loading your STUKO universe…</div></main>;
- return <main className="shell"><aside className={`sidebar ${sidebarOpen?'open':''}`}><div className="brand"><span className="brand-mark">S</span><span>STUKO</span></div><button className="new-btn"><Plus size={17}/> New study</button><nav><div className="nav-label">WORKSPACE</div><a className="nav-item active"><Home size={17}/> Home</a><a className="nav-item"><Compass size={17}/> Discover</a><a className="nav-item"><Library size={17}/> Library <span className="count">11</span></a><a className="nav-item"><CalendarDays size={17}/> Planner</a><a className="nav-item"><Target size={17}/> Goals</a><div className="nav-label spaced">COMMUNITY</div><a className="nav-item"><Users size={17}/> People</a><a className="nav-item"><MessageCircle size={17}/> Wall</a><div className="nav-label spaced">YOU</div><a className="nav-item"><FolderHeart size={17}/> Collections</a></nav><div className="sidebar-bottom"><a className="nav-item"><Settings size={17}/> Settings</a><button className="mini-profile" onClick={()=>window.location.href='/profile'}><div className="avatar small">{profile?.photoURL?<img src={profile.photoURL} alt=""/>:initial}</div><div><b>{displayName}</b><span>@{username}</span></div><MoreHorizontal size={16}/></button></div></aside><section className="content"><header className="topbar"><button className="mobile-menu" onClick={()=>setSidebarOpen(!sidebarOpen)}>{sidebarOpen?<X/>:<Menu/>}</button><div className="search"><Search size={16}/><input placeholder="Search your universe..."/><kbd>⌘ K</kbd></div><div className="top-actions"><button className="icon-btn"><Clock3 size={18}/></button><button className="settings-trigger" aria-label="Open settings" onClick={()=>setSettingsOpen(v=>!v)}><Settings size={18}/></button><button className="avatar" onClick={()=>window.location.href='/profile'}>{profile?.photoURL?<img src={profile.photoURL} alt=""/>:initial}</button>{settingsOpen&&<div className="settings-popover"><button className="settings-row" onClick={()=>{setThemesOpen(true);setSettingsOpen(false)}}><span className="settings-icon"><Palette size={16}/></span><span><b>Themes</b><small>Customize your STUKO look</small></span><span>›</span></button></div>}</div></header><div className="page"><div className="welcome-row"><div><p className="eyebrow">MONDAY, SEPTEMBER 14</p><h1>Good afternoon, {displayName} <span>✦</span></h1><p className="sub">Your study universe, in one place.</p></div><button className="profile-link" onClick={()=>window.location.href=publicPath}>View public profile <span>↗</span></button></div><div className="profile-card"><div className="profile-main"><div className="avatar profile-avatar">{profile?.photoURL?<img src={profile.photoURL} alt="Profile"/>:initial}</div><div className="profile-copy"><div className="name-line"><h2>{displayName.toUpperCase()}</h2><span className="online-dot"></span></div><p className="handle">@{username}</p><p className="bio">{profile?.bio||'Tell people what you are into.'}</p><div className="stats"><span><b>{profile?.followersCount||0}</b> followers</span><span><b>{profile?.followingCount||0}</b> following</span><span><b>7</b> collections</span><span><b>36</b> sessions</span><span><b>1,284</b> chapters studied</span></div></div></div><button className="edit-profile" onClick={()=>window.location.href='/profile'}>Edit profile</button></div><div className="tabs">{['Overview','Wall','Collections','Recent study','Stats'].map(tab=><button key={tab} className={activeTab===tab?'selected':''} onClick={()=>setActiveTab(tab)}>{tab}</button>)}</div><div className="grid"><section className="panel activity-panel"><div className="panel-head"><div><h3>Study activity</h3><p>Little steps count.</p></div><button className="select">Last 30 days <ChevronDown size={14}/></button></div><div className="big-stat"><strong>36</strong><span>sessions this month</span><span className="up">↑ 18%</span></div><div className="heatmap">{Array.from({length:84}).map((_,i)=><span key={i} className={`cell level-${(i*7+i%5)%5}`}></span>)}</div><div className="heat-label"><span>Less</span><i></i><i></i><i></i><i></i><span>More</span></div></section><section className="panel streak-panel"><div className="panel-head"><div><h3>Current streak</h3><p>Keep the chain alive.</p></div><Sparkles size={18}/></div><div className="streak"><strong>7</strong><span>days</span></div><div className="week">{['M','T','W','T','F','S','S'].map((d,i)=><div key={i} className={i<5?'done':''}><span>{i<5?<Check size={13}/>:''}</span><small>{d}</small></div>)}</div><p className="tiny">Best streak <b>12 days</b></p></section><section className="panel"><div className="panel-head"><div><h3>Top interests</h3><p>What your brain keeps coming back to.</p></div><button className="dots">•••</button></div><div className="bars">{genres.map(([g,n])=><div className="bar-row" key={g}><span>{g}</span><div className="bar"><i style={{width:`${Number(n)*2.45}%`}}></i></div><b>{n}%</b></div>)}</div></section><section className="panel"><div className="panel-head"><div><h3>Library</h3><p>Your knowledge shelf.</p></div><BookOpen size={18}/></div><div className="library-grid">{library.map(([name,n])=><div className="lib-item" key={name}><strong>{n}</strong><span>{name}</span></div>)}</div><button className="wide-btn">Open library <span>→</span></button></section><section className="panel wide"><div className="panel-head"><div><h3>Recently studied</h3><p>Your latest little victories.</p></div><button className="text-btn">See all →</button></div><div className="recent-list">{[['Data Structures','Trees & Graphs','48 min','CS'],['Ancient Egypt','The Book of the Dead','31 min','HM'],['Java','Interfaces & Polymorphism','52 min','JV']].map(([a,b,c,d])=><div className="recent" key={a}><div className="subject-icon">{d}</div><div className="recent-title"><b>{a}</b><span>{b}</span></div><span className="recent-time">{c}</span><span className="completed">Completed</span></div>)}</div></section></div><footer><span>STUKO · study, but make it yours.</span><span>Built around your interests, not against them.</span></footer></div></section>{themesOpen&&<div className="theme-modal-backdrop" onClick={()=>setThemesOpen(false)}><section className="theme-modal" onClick={e=>e.stopPropagation()}><div className="theme-modal-head"><div><p>APPEARANCE</p><h2>Themes</h2></div><button onClick={()=>setThemesOpen(false)}>×</button></div><div className="theme-options">{themes.slice(0,3).map(t=><button key={t.id} className={`theme-option ${theme===t.id?'selected':''}`} onClick={()=>setTheme(t.id)}><span className={`theme-preview ${t.id}`}><span>{t.id==='system'?'◐':''}</span><i></i></span><span className="theme-copy"><b>{t.name}</b><small>{t.description}</small></span><span className="radio">{theme===t.id?'✓':''}</span></button>)}</div><div className="explore-title">EXPLORE MORE THEMES</div><div className="theme-options">{themes.slice(3).map(t=><button key={t.id} className={`theme-option ${theme===t.id?'selected':''}`} onClick={()=>setTheme(t.id)}><span className={`theme-preview ${t.id}`}><span>✦</span><i>♡</i></span><span className="theme-copy"><b>{t.name}</b><small>{t.description}</small></span><span className="radio">{theme===t.id?'✓':''}</span></button>)}</div><p className="theme-note">Default follows your device appearance. Your choice is saved on this device.</p></section></div>}</main>}
+type Profile = { displayName?: string; username?: string; photoURL?: string };
+
+const features = [
+  { title: 'Pomodoro timer', desc: 'Focus. Break. Repeat.', icon: Clock3, href: '/pomodoro', key: '01' },
+  { title: 'Study room', desc: 'Study together, quietly.', icon: Users, href: '/study-room', key: '02' },
+  { title: 'Flashcards', desc: 'Turn notes into memory.', icon: Layers3, href: '/flashcards', key: '03' },
+  { title: 'Quiz', desc: 'See what actually stuck.', icon: Trophy, href: '/quiz', key: '04' },
+  { title: 'Summarizer', desc: 'Less reading. More knowing.', icon: FileText, href: '/summarizer', key: '05' },
+  { title: 'Study library', desc: 'Keep everything together.', icon: BookOpen, href: '/library', key: '06' },
+];
+
+export default function HomePage() {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!firebaseConfigured()) { setLoading(false); return; }
+    const { auth, db } = getFirebase();
+    return onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = '/auth'; return; }
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (!snap.exists() || !snap.data().username) { window.location.href = '/onboarding'; return; }
+      setProfile(snap.data() as Profile);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) return <main className="landing-loading">STUKO<span>.</span></main>;
+
+  const name = profile?.displayName || 'there';
+  const firstName = name.split(' ')[0];
+
+  return (
+    <main className="landing">
+      <style jsx global>{`
+        .landing, .landing * { box-sizing: border-box; }
+        .landing { min-height:100vh; background:#0b0b0b; color:#f5f2e9; font-family:Arial, Helvetica, sans-serif; overflow:hidden; position:relative; }
+        .landing:before { content:''; position:absolute; width:650px; height:650px; border-radius:50%; background:#f5c518; opacity:.055; filter:blur(100px); top:-260px; right:-160px; pointer-events:none; }
+        .landing:after { content:''; position:absolute; width:430px; height:430px; border-radius:50%; background:#f5c518; opacity:.035; filter:blur(100px); bottom:-220px; left:-130px; pointer-events:none; }
+        .landing-nav { height:78px; padding:0 5.5vw; display:flex; align-items:center; justify-content:space-between; position:relative; z-index:2; }
+        .landing-logo { display:flex; align-items:center; gap:10px; font-size:17px; font-weight:900; letter-spacing:.18em; }
+        .logo-box { width:29px; height:29px; border:2px solid #f5c518; color:#f5c518; border-radius:8px; display:grid; place-items:center; font-size:13px; letter-spacing:0; }
+        .landing-profile { display:flex; align-items:center; gap:10px; color:#a9a69d; font-size:11px; }
+        .landing-avatar { width:34px; height:34px; border-radius:50%; overflow:hidden; border:1px solid #3b3932; background:#f5c518; color:#111; display:grid; place-items:center; font-weight:900; }
+        .landing-avatar img { width:100%; height:100%; object-fit:cover; }
+        .hero { min-height:calc(100vh - 78px); padding:7vh 7vw 34px; display:flex; flex-direction:column; justify-content:space-between; position:relative; z-index:1; }
+        .hero-copy { max-width:850px; padding-top:2vh; }
+        .kicker { color:#f5c518; font-size:10px; font-weight:800; letter-spacing:.2em; text-transform:uppercase; margin:0 0 25px; }
+        .hero h1 { font-family:Inter, Arial, Helvetica, sans-serif; font-size:clamp(54px, 8.2vw, 118px); line-height:.91; letter-spacing:-.075em; margin:0; font-weight:650; max-width:900px; }
+        .hero h1 em { color:#f5c518; font-style:normal; }
+        .hero-sub { margin:28px 0 0; color:#9d9a91; font-size:15px; line-height:1.7; max-width:510px; }
+        .hero-sub b { color:#e9e5d9; font-weight:600; }
+        .start-btn { margin-top:28px; display:inline-flex; align-items:center; gap:9px; background:#f5c518; color:#111; border:0; border-radius:8px; padding:12px 17px; font-size:12px; font-weight:900; cursor:pointer; transition:transform .2s, box-shadow .2s; }
+        .start-btn:hover { transform:translateY(-2px); box-shadow:0 10px 35px #f5c51822; }
+        .feature-zone { margin-top:7vh; }
+        .feature-label { display:flex; align-items:center; gap:13px; margin-bottom:13px; color:#77746d; font-size:9px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; }
+        .feature-label:after { content:''; height:1px; background:#282722; flex:1; }
+        .features { display:grid; grid-template-columns:repeat(6,1fr); border-top:1px solid #292823; border-left:1px solid #292823; }
+        .feature { min-height:150px; border-right:1px solid #292823; border-bottom:1px solid #292823; padding:19px 16px 15px; display:flex; flex-direction:column; justify-content:space-between; text-align:left; background:#0b0b0b; color:#f4f1e8; cursor:pointer; position:relative; transition:background .22s, transform .22s; }
+        .feature:hover { background:#13130f; transform:translateY(-3px); z-index:2; }
+        .feature:hover .feature-arrow { color:#f5c518; transform:translate(2px,-2px); }
+        .feature-top { display:flex; justify-content:space-between; color:#6f6c65; }
+        .feature-num { font-size:9px; font-weight:800; letter-spacing:.1em; }
+        .feature-icon { width:27px; height:27px; border:1px solid #39372f; border-radius:7px; display:grid; place-items:center; }
+        .feature:hover .feature-icon { border-color:#f5c518; color:#f5c518; }
+        .feature h2 { font-size:13px; margin:0 0 5px; font-weight:800; letter-spacing:-.01em; }
+        .feature p { margin:0; color:#77746d; font-size:9px; line-height:1.45; }
+        .feature-arrow { transition:transform .2s, color .2s; position:absolute; right:14px; bottom:14px; }
+        .landing-footer { display:flex; justify-content:space-between; align-items:center; margin-top:17px; color:#5f5c56; font-size:9px; }
+        .landing-footer span:first-child { color:#f5c518; font-weight:800; letter-spacing:.12em; }
+        .landing-loading { min-height:100vh; display:grid; place-items:center; background:#0b0b0b; color:#f5f2e9; font:900 22px Arial; letter-spacing:.18em; }
+        .landing-loading span { color:#f5c518; }
+        @media(max-width:900px){ .features{grid-template-columns:repeat(3,1fr)} .hero{padding:5vh 5vw 25px} .hero h1{font-size:clamp(52px,11vw,90px)} }
+        @media(max-width:600px){ .landing-profile span{display:none} .hero{min-height:auto;padding:6vh 6vw 24px} .hero-sub{font-size:13px} .features{grid-template-columns:repeat(2,1fr)} .feature{min-height:135px} .landing-footer{gap:12px;align-items:flex-start;flex-direction:column} }
+      `}</style>
+
+      <nav className="landing-nav">
+        <div className="landing-logo"><span className="logo-box">S</span>STUKO</div>
+        <div className="landing-profile">
+          <span>{name}</span>
+          <div className="landing-avatar">{profile?.photoURL ? <img src={profile.photoURL} alt="" /> : firstName[0]?.toUpperCase()}</div>
+        </div>
+      </nav>
+
+      <section className="hero">
+        <div className="hero-copy">
+          <p className="kicker">Your study universe</p>
+          <h1>Hey, {firstName}.<br /><em>Let's start.</em></h1>
+          <p className="hero-sub">No templates. No boring dashboards. Just a place built around <b>how you actually like to learn.</b></p>
+          <button className="start-btn" onClick={() => document.getElementById('features')?.scrollIntoView({ behavior:'smooth' })}>Start studying <Play size={13} fill="currentColor" /></button>
+        </div>
+
+        <div className="feature-zone" id="features">
+          <div className="feature-label"><Sparkles size={11} /> Start with a tool</div>
+          <div className="features">
+            {features.map(({ title, desc, icon: Icon, href, key }) => (
+              <button className="feature" key={title} onClick={() => { window.location.href = href; }}>
+                <div className="feature-top"><span className="feature-num">{key}</span><span className="feature-icon"><Icon size={14} /></span></div>
+                <div><h2>{title}</h2><p>{desc}</p></div>
+                <ArrowUpRight className="feature-arrow" size={14} />
+              </button>
+            ))}
+          </div>
+          <div className="landing-footer"><span>STUKO</span><span>Study around what you love.</span></div>
+        </div>
+      </section>
+    </main>
+  );
+}
