@@ -50,21 +50,11 @@ export default function HomePage() {
           overflow:hidden;
           color:#10191c;
           font-family:'Styrene A','Styrene','Arial',sans-serif;
-          background:#63c9ca url('/fishiesss.svg') center/cover no-repeat;
-        }
-        .landing::before {
-          content:'';
-          position:absolute;
-          inset:0;
-          background:linear-gradient(180deg,rgba(226,255,252,.20) 0%,rgba(223,255,251,.08) 45%,rgba(7,45,61,.14) 100%);
-          pointer-events:none;
-        }
-        .landing::after {
-          content:'';
-          position:absolute;
-          inset:0;
-          background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.18),transparent 42%);
-          pointer-events:none;
+          background-color:#eee3d4;
+          background-image:url('/landing-background.png');
+          background-size:cover;
+          background-position:center;
+          background-repeat:no-repeat;
         }
         .landing-nav {
           height:74px;
@@ -108,7 +98,7 @@ export default function HomePage() {
           border-radius:50%;
           overflow:hidden;
           border:2px solid rgba(16,25,28,.7);
-          background:#dff9f4;
+          background:#f4eadf;
           display:grid;
           place-items:center;
         }
@@ -132,7 +122,7 @@ export default function HomePage() {
           padding:7px 11px;
           border:1px solid rgba(16,25,28,.18);
           border-radius:999px;
-          background:rgba(235,255,252,.30);
+          background:rgba(255,255,255,.30);
           backdrop-filter:blur(8px);
           font-size:9px;
           font-weight:800;
@@ -173,7 +163,7 @@ export default function HomePage() {
           box-shadow:0 8px 24px rgba(5,37,49,.16);
           transition:transform .2s,background .2s,color .2s;
         }
-        .start-btn:hover { transform:translateY(-2px); background:#e9fffb; color:#10191c; }
+        .start-btn:hover { transform:translateY(-2px); background:#fff; color:#10191c; }
 
         .feature-zone { margin-top:6vh; }
         .feature-label {
@@ -202,7 +192,7 @@ export default function HomePage() {
           flex-direction:column;
           justify-content:space-between;
           text-align:left;
-          background:rgba(237,255,252,.48);
+          background:rgba(255,255,255,.48);
           backdrop-filter:blur(12px);
           color:#10191c;
           cursor:pointer;
@@ -211,7 +201,7 @@ export default function HomePage() {
         }
         .feature:hover {
           transform:translateY(-5px) rotate(-.4deg);
-          background:rgba(250,255,254,.72);
+          background:rgba(255,255,255,.72);
           box-shadow:0 16px 35px rgba(8,51,62,.14);
         }
         .feature:nth-child(even):hover { transform:translateY(-5px) rotate(.4deg); }
@@ -225,7 +215,7 @@ export default function HomePage() {
           border:1px solid rgba(16,25,28,.15);
           background:rgba(255,255,255,.34);
         }
-        .feature:hover .feature-icon { background:#10191c; color:#effffb; }
+        .feature:hover .feature-icon { background:#10191c; color:#fff; }
         .feature h2 { margin:0 0 4px; font-size:12px; font-weight:850; letter-spacing:-.02em; }
         .feature p { margin:0; color:rgba(16,25,28,.58); font-size:9px; font-weight:500; }
         .feature-arrow { opacity:.5; transition:transform .2s,opacity .2s; }
@@ -243,7 +233,7 @@ export default function HomePage() {
           min-height:100vh;
           display:grid;
           place-items:center;
-          background:#63c9ca;
+          background:#eee3d4;
           color:#10191c;
           font:900 22px Arial;
           letter-spacing:.18em;
