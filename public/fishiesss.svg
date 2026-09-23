@@ -1,1 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1199 672"><image href="data:image/jpeg;base64,PLACEHOLDER" width="1199" height="672" preserveAspectRatio="xMidYMid slice"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1199 672" preserveAspectRatio="xMidYMid slice">
+<defs>
+ <linearGradient id="ocean" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#62d7d2"/><stop offset=".42" stop-color="#218b9a"/><stop offset="1" stop-color="#062f4d"/></linearGradient>
+ <radialGradient id="light" cx="35%" cy="25%"><stop stop-color="#d9ffff" stop-opacity=".85"/><stop offset="1" stop-color="#4dc6c5" stop-opacity="0"/></radialGradient>
+ <filter id="soft"><feGaussianBlur stdDeviation="14"/></filter>
+ <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".018" numOctaves="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="18"/></filter>
+</defs>
+<rect width="1199" height="672" fill="url(#ocean)"/>
+<rect width="1199" height="672" fill="url(#light)"/>
+<g opacity=".38" filter="url(#soft)" fill="#b9ffff"><ellipse cx="260" cy="125" rx="300" ry="110"/><ellipse cx="650" cy="80" rx="260" ry="75"/><ellipse cx="180" cy="470" rx="260" ry="120"/></g>
+<g fill="none" stroke="#a9f6ee" stroke-width="18" opacity=".3" filter="url(#rough)"><path d="M-40 110 C170 30 260 230 470 135 S850 30 1240 150"/><path d="M-60 260 C160 170 310 390 520 270 S930 190 1260 300"/><path d="M-70 510 C180 390 320 590 570 480 S940 410 1260 520"/></g>
+<g fill="#06192b" stroke="#0a2235" stroke-width="4" opacity=".95">
+ <path d="M135 435 C205 420 252 373 286 302 C311 251 328 188 381 129 C401 107 421 94 437 92 C438 128 423 169 403 205 C378 250 365 292 346 331 C319 387 280 431 220 459 L164 493 L185 447 Z"/>
+ <path d="M330 560 C385 540 423 505 450 451 C473 405 487 373 530 348 C548 338 562 333 575 333 C570 361 554 393 537 419 C513 455 500 488 476 519 C449 553 416 577 370 594 L328 617 L344 581 Z"/>
+ <path d="M855 262 C897 258 933 239 966 211 C990 190 1016 178 1036 177 C1033 203 1016 227 994 247 C1016 258 1040 274 1053 294 C1028 294 1003 286 982 276 C967 315 952 349 926 376 C900 404 874 421 845 428 L865 383 C877 352 884 322 882 291 Z"/>
+</g>
+<g fill="#d7ffff" opacity=".28"><circle cx="90" cy="110" r="4"/><circle cx="520" cy="150" r="3"/><circle cx="720" cy="380" r="5"/><circle cx="1030" cy="470" r="4"/><circle cx="610" cy="570" r="3"/><circle cx="1080" cy="130" r="3"/><circle cx="270" cy="610" r="5"/></g>
+</svg>
