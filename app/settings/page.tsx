@@ -7,16 +7,17 @@ import { useRouter } from 'next/navigation';
 import { firebaseConfigured, getFirebase, googleProvider } from '../../lib/firebase';
 import styles from './settings.module.css';
 
-type Profile = { username: string; displayName: string; usernameChangedAt?: { seconds?: number } | null };
+type Profile = { username: string; displayName: string; bio?: string; usernameChangedAt?: { seconds?: number } | null };
 
 const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 
 export default function SettingsPage() {
   const router = useRouter();
   const [uid, setUid] = useState('');
-  const [profile, setProfile] = useState<Profile>({ username: '', displayName: '' });
+  const [profile, setProfile] = useState<Profile>({ username: '', displayName: '', bio: '' });
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [bio, setBio] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -35,6 +36,7 @@ export default function SettingsPage() {
       setProfile(data);
       setUsername(data.username || '');
       setDisplayName(data.displayName || '');
+      setBio(data.bio || '');
       setLoading(false);
     });
   }, [router]);
@@ -49,8 +51,10 @@ export default function SettingsPage() {
       const { db } = getFirebase();
       const cleanUsername = username.trim().toLowerCase().replace(/[^a-z_.]/g, '');
       const cleanDisplayName = displayName.trim();
+      const cleanBio = bio.trim();
       if (!cleanUsername || cleanUsername.length < 3 || !/^[a-z_.]+$/.test(cleanUsername)) throw new Error('Username must be at least 3 characters and use only lowercase letters, underscores (_) and periods (.).');
       if (!cleanDisplayName) throw new Error('Display name cannot be empty.');
+      if (cleanBio.length > 160) throw new Error('Bio must be 160 characters or fewer.');
 
       await runTransaction(db, async tx => {
         const userRef = doc(db, 'users', uid);
@@ -66,12 +70,12 @@ export default function SettingsPage() {
           if (taken.exists() && taken.data().uid !== uid) throw new Error('That username is already taken.');
           tx.set(usernameRef, { uid, username: cleanUsername }, { merge: true });
           if (oldUsername) tx.delete(doc(db, 'usernames', oldUsername));
-          tx.set(userRef, { username: cleanUsername, displayName: cleanDisplayName, usernameChangedAt: serverTimestamp(), updatedAt: serverTimestamp() }, { merge: true });
+          tx.set(userRef, { username: cleanUsername, displayName: cleanDisplayName, bio: cleanBio, usernameChangedAt: serverTimestamp(), updatedAt: serverTimestamp() }, { merge: true });
         } else {
-          tx.set(userRef, { displayName: cleanDisplayName, updatedAt: serverTimestamp() }, { merge: true });
+          tx.set(userRef, { displayName: cleanDisplayName, bio: cleanBio, updatedAt: serverTimestamp() }, { merge: true });
         }
       });
-      setProfile(p => ({ ...p, username: cleanUsername, displayName: cleanDisplayName, usernameChangedAt: cleanUsername !== profile.username ? { seconds: Math.floor(Date.now() / 1000) } : p.usernameChangedAt }));
+      setProfile(p => ({ ...p, username: cleanUsername, displayName: cleanDisplayName, bio: cleanBio, usernameChangedAt: cleanUsername !== profile.username ? { seconds: Math.floor(Date.now() / 1000) } : p.usernameChangedAt }));
       setMessage('Settings saved ✦');
     } catch (e) { setMessage(e instanceof Error ? e.message : 'Could not save settings.'); }
     finally { setSaving(false); }
@@ -111,6 +115,7 @@ export default function SettingsPage() {
           <div className={styles.sectionHead}><div><h2>Account</h2><p>Keep your STUKO identity up to date.</p></div></div>
           <label className={styles.field}>Username <small>{usernameLocked ? `Locked until ${nextChange}` : 'You can change this once every 12 months.'}</small><input className={styles.input} value={username} onChange={e => setUsername(e.target.value)} disabled={usernameLocked} maxLength={30}/></label>
           <label className={styles.field}>Display name <small>You can change this anytime.</small><input className={styles.input} value={displayName} onChange={e => setDisplayName(e.target.value)} maxLength={60}/></label>
+          <label className={styles.field}>Bio <small>You can change this anytime. Keep it under 160 characters.</small><textarea className={styles.input} value={bio} onChange={e => setBio(e.target.value)} maxLength={160} rows={4} placeholder="Tell people a little about you…" /></label>
           <button className={styles.primary} onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button>
           {message && <p className={styles.message}>{message}</p>}
         </section>
