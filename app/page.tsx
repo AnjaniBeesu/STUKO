@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -22,6 +23,8 @@ const options = [
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string[]>([]);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [username, setUsername] = useState('');
 
   useEffect(() => {
     if (!firebaseConfigured()) {
@@ -44,6 +47,7 @@ export default function HomePage() {
         return;
       }
 
+      setUsername((snap.data() as Profile).username ?? '');
       setLoading(false);
     });
   }, []);
@@ -70,12 +74,38 @@ export default function HomePage() {
     <main className="reference-page">
       <div className="reference-clouds" aria-hidden="true" />
 
-      <header className="picker-header">
-        <button className="back-link" type="button" onClick={() => window.history.back()}>
-          ← back
-        </button>
-        <span className="picker-brand">rila</span>
-        <span className="step">1&nbsp; / &nbsp;∞</span>
+      <header className="stuko-header">
+        <Link href="/" className="stuko-brand" aria-label="STUKO home">
+          <span className="stuko-logo" aria-hidden="true">✦</span>
+          <span>STUKO</span>
+        </Link>
+
+        <div className="profile-menu-wrap">
+          <button
+            className="profile-button"
+            type="button"
+            aria-expanded={profileOpen}
+            aria-haspopup="menu"
+            onClick={() => setProfileOpen((open) => !open)}
+          >
+            profile <span className={`profile-chevron${profileOpen ? ' open' : ''}`}>⌄</span>
+          </button>
+
+          {profileOpen && (
+            <div className="profile-dropdown" role="menu">
+              <Link
+                href={username ? `/u/${encodeURIComponent(username)}` : '/profile'}
+                role="menuitem"
+                onClick={() => setProfileOpen(false)}
+              >
+                public profile
+              </Link>
+              <Link href="/settings" role="menuitem" onClick={() => setProfileOpen(false)}>
+                settings
+              </Link>
+            </div>
+          )}
+        </div>
       </header>
 
       <section className="options-panel">
@@ -109,6 +139,12 @@ export default function HomePage() {
         </button>
       </section>
 
+      <footer className="stuko-footer">
+        <Link href="/privacy">privacy policy</Link>
+        <Link href="/terms">terms and conditions</Link>
+        <Link href="/cookies">cookie policy</Link>
+      </footer>
+
       <ReferenceStyles />
     </main>
   );
@@ -136,11 +172,13 @@ function ReferenceStyles() {
         position: relative;
         min-height: 100svh;
         width: 100%;
-        overflow: hidden;
+        overflow-x: hidden;
         isolation: isolate;
         color: #090909;
         background: #fff;
         font-family: Georgia, 'Times New Roman', serif;
+        display: flex;
+        flex-direction: column;
       }
 
       .reference-clouds {
@@ -155,58 +193,105 @@ function ReferenceStyles() {
         opacity: 0.30;
       }
 
-      .picker-header {
+      .stuko-header,
+      .stuko-footer {
         position: relative;
-        z-index: 2;
+        z-index: 5;
         width: 100%;
-        height: 78px;
-        padding: 0 57px;
-        display: grid;
-        grid-template-columns: 1fr auto 1fr;
-        align-items: center;
         box-sizing: border-box;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        flex-shrink: 0;
       }
 
-      .back-link,
-      .step,
-      .picker-brand {
+      .stuko-header {
+        min-height: 78px;
+        padding: 0 42px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      }
+
+      .stuko-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
         color: #090909;
+        text-decoration: none;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: -0.045em;
       }
 
-      .back-link {
-        justify-self: start;
-        padding: 0;
+      .stuko-logo {
+        display: inline-grid;
+        width: 27px;
+        height: 27px;
+        place-items: center;
+        font-size: 23px;
+        line-height: 1;
+      }
+
+      .profile-menu-wrap {
+        position: relative;
+      }
+
+      .profile-button {
+        appearance: none;
         border: 0;
         background: transparent;
+        color: #090909;
+        padding: 10px 2px;
         cursor: pointer;
-        font-size: 19px;
+        font-size: 16px;
         line-height: 1;
         letter-spacing: -0.02em;
       }
 
-      .back-link:hover {
-        opacity: 0.55;
+      .profile-chevron {
+        display: inline-block;
+        margin-left: 5px;
+        transition: transform 180ms ease;
       }
 
-      .picker-brand {
-        justify-self: center;
-        font-size: 42px;
-        line-height: 1;
-        letter-spacing: -0.075em;
+      .profile-chevron.open {
+        transform: rotate(180deg);
       }
 
-      .step {
-        justify-self: end;
-        font-size: 13px;
+      .profile-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        min-width: 185px;
+        padding: 7px;
+        background: rgba(255, 255, 255, 0.93);
+        border: 1px solid rgba(0, 0, 0, 0.10);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        z-index: 10;
+      }
+
+      .profile-dropdown a {
+        display: block;
+        padding: 12px 13px;
+        color: #090909;
+        text-decoration: none;
+        font-size: 15px;
         line-height: 1;
-        letter-spacing: 0.04em;
+      }
+
+      .profile-dropdown a:hover {
+        background: rgba(0, 0, 0, 0.06);
       }
 
       .options-panel {
         position: relative;
         z-index: 1;
         width: min(100% - 40px, 1060px);
-        min-height: calc(100svh - 78px);
+        flex: 1;
+        min-height: calc(100svh - 156px);
         margin: 0 auto;
         padding: clamp(90px, 13.8vh, 145px) 0 90px;
         box-sizing: border-box;
@@ -300,6 +385,27 @@ function ReferenceStyles() {
         cursor: default;
       }
 
+      .stuko-footer {
+        min-height: 72px;
+        padding: 0 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 34px;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+      }
+
+      .stuko-footer a {
+        color: #090909;
+        text-decoration: none;
+        font-size: 14px;
+        line-height: 1;
+      }
+
+      .stuko-footer a:hover {
+        opacity: 0.55;
+      }
+
       .reference-loader {
         position: relative;
         z-index: 1;
@@ -311,26 +417,28 @@ function ReferenceStyles() {
       }
 
       @media (max-width: 800px) {
-        .picker-header {
-          height: 68px;
+        .stuko-header {
+          min-height: 68px;
           padding: 0 22px;
         }
 
-        .back-link {
-          font-size: 16px;
+        .stuko-brand {
+          font-size: 21px;
         }
 
-        .picker-brand {
-          font-size: 34px;
+        .stuko-logo {
+          width: 24px;
+          height: 24px;
+          font-size: 20px;
         }
 
-        .step {
-          font-size: 11px;
+        .profile-button {
+          font-size: 15px;
         }
 
         .options-panel {
           width: min(100% - 28px, 680px);
-          min-height: calc(100svh - 68px);
+          min-height: calc(100svh - 140px);
           padding-top: 12vh;
         }
 
@@ -358,10 +466,21 @@ function ReferenceStyles() {
           font-size: 16px;
           padding: 11px 17px 12px;
         }
+
+        .stuko-footer {
+          min-height: 68px;
+          padding: 14px 18px;
+          gap: 18px;
+          flex-wrap: wrap;
+        }
+
+        .stuko-footer a {
+          font-size: 12px;
+        }
       }
 
       @media (max-width: 480px) {
-        .picker-header {
+        .stuko-header {
           padding: 0 15px;
         }
 
