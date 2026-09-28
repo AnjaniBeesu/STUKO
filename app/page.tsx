@@ -109,24 +109,31 @@ export default function HomePage() {
           font-family: Roobert, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
-        /* The supplied cloud image is the actual page canvas, softened to exactly 30%. */
+        /* The supplied cloud image is the actual homepage canvas. It must remain visible at 30%. */
         .stuko-cloud-layer {
-          position: fixed;
+          position: absolute;
           inset: 0;
-          z-index: -1;
+          z-index: 0;
           pointer-events: none;
           background: #fff url('/stuko-clouds.jpg') center / cover no-repeat;
           opacity: 0.30;
         }
 
-        /* Full-width chrome: the white 85% layer is never clipped by rounded page cards. */
+        /* Keep all actual UI above the cloud image. */
+        .stuko-header,
+        .stuko-main,
+        .stuko-footer {
+          position: relative;
+          z-index: 1;
+        }
+
+        /* Full-width chrome: white at 85%, inset content only so nothing is cut off at the edges. */
         .stuko-header,
         .stuko-footer {
           width: 100%;
           flex: 0 0 auto;
           background: var(--stuko-white-85);
           border: 0;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(18px);
           -webkit-backdrop-filter: blur(18px);
         }
@@ -141,6 +148,7 @@ export default function HomePage() {
           position: sticky;
           top: 0;
           z-index: 50;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.95);
         }
 
         .stuko-header-inner {
@@ -255,7 +263,6 @@ export default function HomePage() {
 
         .stuko-account-menu button:hover { background: rgba(0, 0, 0, 0.055); }
 
-        /* Reference-inspired picker composition: quiet intro + small rounded choices. */
         .stuko-main {
           width: min(calc(100% - 40px), 980px);
           margin: 0 auto;
@@ -297,7 +304,7 @@ export default function HomePage() {
           font: 400 16px/1.45 Roobert, ui-sans-serif, sans-serif;
         }
 
-        /* These are chips, not cards. No icons, descriptions, shadows or giant rows. */
+        /* Small cute rounded buttons — intentionally NOT cards or giant list rows. */
         .stuko-tool-grid {
           width: min(100%, 840px);
           margin-top: 52px;
@@ -341,7 +348,6 @@ export default function HomePage() {
 
         .stuko-footer {
           border-top: 1px solid rgba(255, 255, 255, 0.95);
-          border-bottom: 0;
         }
 
         .stuko-footer-inner {
@@ -386,9 +392,10 @@ export default function HomePage() {
           font-family: Roobert, ui-sans-serif, sans-serif;
         }
 
-        .stuko-cloud-layer {
+        .stuko-loader .stuko-cloud-layer {
           position: absolute;
           inset: 0;
+          z-index: 0;
           background: #fff url('/stuko-clouds.jpg') center / cover no-repeat;
           opacity: 0.30;
         }
