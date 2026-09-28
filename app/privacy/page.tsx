@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import SiteChrome from '@/app/components/SiteChrome';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy — Stuko',
@@ -7,8 +8,8 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <main style={{ maxWidth: '900px', margin: '0 auto', padding: '120px 24px 80px', lineHeight: 1.7 }}>
-      <article>
+    <SiteChrome>
+      <article className="legal-article">
         <h1>Privacy Policy for Stuko</h1>
         <p><strong>Effective Date:</strong> September 2026</p>
         <p><strong>Last Updated:</strong> December 2026</p>
@@ -110,6 +111,6 @@ export default function PrivacyPolicyPage() {
         <p>For any questions about this Privacy Policy or your data:</p>
         <p><strong>Anjani Beesu</strong><br />India<br />Email: <strong>anjanibeesu@gmail.com</strong></p>
       </article>
-    </main>
+    </SiteChrome>
   );
 }
