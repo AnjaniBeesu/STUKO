@@ -1,14 +1,25 @@
-/* Dark-mode cloud background fix: use the dedicated uploaded dark cloud image. */
+/* FINAL dark-mode cloud background fix. */
 .stuko-site.stuko-dark .stuko-clouds {
-  background-image: url('/dark%20clouds.jpg') !important;
+  background-image: url("/dark%20clouds.jpg") !important;
   background-position: center center !important;
   background-size: cover !important;
   background-repeat: no-repeat !important;
-  opacity: 0.34 !important;
+  background-color: #111 !important;
+  opacity: 0.62 !important;
   filter: none !important;
   visibility: visible !important;
+  display: block !important;
+  mix-blend-mode: normal !important;
 }
 
 .stuko-site.stuko-dark::before {
   background: #111 !important;
+}
+
+.stuko-site.stuko-dark .stuko-clouds::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.16);
+  pointer-events: none;
 }
