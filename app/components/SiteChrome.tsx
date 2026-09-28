@@ -226,7 +226,7 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
           .stuko-brand { font-size: 20px; }
           .stuko-logo { width: 23px; height: 23px; font-size: 20px; }
           .stuko-header-actions { gap: 14px; }
-          .theme-switch { --toggle-size: 10px; }
+          .theme-switch { --toggle-size: 8px; }
           .stuko-content { padding: 98px 18px 56px; }
           .legal-page-content { padding-top: 86px; }
           .stuko-content .legal-article { padding: 28px 22px; border-radius: 18px; }
