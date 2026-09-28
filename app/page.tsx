@@ -197,16 +197,19 @@ function ReferenceStyles() {
         opacity: 0.30;
       }
 
-      /* Full-bleed bars: deliberately escape any parent/container width. */
+      /* True device-edge bars. No container bleed tricks, margins, rounded corners, or side gaps. */
       .stuko-header,
       .stuko-footer {
         position: relative;
         z-index: 5;
-        width: 100vw;
-        max-width: 100vw;
-        margin-left: calc(50% - 50vw);
-        margin-right: calc(50% - 50vw);
+        display: flex;
+        width: 100vw !important;
+        max-width: none !important;
+        margin: 0 !important;
+        left: 0 !important;
+        right: auto !important;
         box-sizing: border-box;
+        border-radius: 0 !important;
         background: rgba(255, 255, 255, 0.85);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
@@ -216,7 +219,6 @@ function ReferenceStyles() {
       .stuko-header {
         min-height: 78px;
         padding: 0 42px;
-        display: flex;
         align-items: center;
         justify-content: space-between;
         border-bottom: 1px solid rgba(0, 0, 0, 0.08);
@@ -380,128 +382,84 @@ function ReferenceStyles() {
         cursor: pointer;
         font-size: 17px;
         line-height: 1;
-        transition: 180ms ease;
       }
 
       .continue-button:not(:disabled) {
         color: #111;
-        border-color: #111;
-        background: rgba(255, 255, 255, 0.35);
+        background: rgba(255, 255, 255, 0.36);
+        cursor: pointer;
       }
 
       .continue-button:disabled {
-        cursor: default;
+        cursor: not-allowed;
       }
 
       .stuko-footer {
-        min-height: 72px;
+        min-height: 64px;
         padding: 0 42px;
-        display: flex;
         align-items: center;
         justify-content: center;
-        gap: 34px;
+        gap: 30px;
         border-top: 1px solid rgba(0, 0, 0, 0.08);
       }
 
       .stuko-footer a {
         color: #090909;
         text-decoration: none;
-        font-size: 14px;
+        font-size: 13px;
         line-height: 1;
       }
 
       .stuko-footer a:hover {
-        opacity: 0.55;
+        text-decoration: underline;
+        text-underline-offset: 3px;
       }
 
       .reference-loader {
         position: relative;
-        z-index: 1;
+        z-index: 2;
         min-height: 100svh;
         display: grid;
         place-items: center;
-        font-size: 42px;
-        letter-spacing: -0.075em;
+        font-size: 32px;
       }
 
-      @media (max-width: 800px) {
+      @media (max-width: 600px) {
         .stuko-header {
           min-height: 68px;
-          padding: 0 22px;
+          padding: 0 20px;
         }
 
         .stuko-brand {
-          font-size: 21px;
-        }
-
-        .stuko-logo {
-          width: 24px;
-          height: 24px;
           font-size: 20px;
         }
 
-        .profile-button {
-          font-size: 15px;
-        }
-
-        .options-panel {
-          width: min(100% - 28px, 680px);
-          min-height: calc(100svh - 140px);
-          padding-top: 12vh;
-        }
-
-        .options-kicker {
-          margin-bottom: 20px;
-          font-size: 11px;
-        }
-
-        .picker-title {
-          font-size: clamp(43px, 10vw, 68px);
-          line-height: 0.98;
-        }
-
-        .picker-subtitle {
-          margin-top: 20px;
-          font-size: 17px;
-        }
-
-        .options-row {
-          margin-top: 38px;
-          gap: 9px;
-        }
-
-        .option-chip {
-          font-size: 16px;
-          padding: 11px 17px 12px;
+        .stuko-logo {
+          width: 23px;
+          height: 23px;
+          font-size: 20px;
         }
 
         .stuko-footer {
-          min-height: 68px;
-          padding: 14px 18px;
-          gap: 18px;
+          min-height: 58px;
+          padding: 0 16px;
+          gap: 16px;
           flex-wrap: wrap;
         }
 
         .stuko-footer a {
-          font-size: 12px;
-        }
-      }
-
-      @media (max-width: 480px) {
-        .stuko-header {
-          padding: 0 15px;
+          font-size: 11px;
         }
 
         .options-panel {
-          padding-top: 10vh;
+          width: min(100% - 24px, 1060px);
+          min-height: calc(100svh - 126px);
+          padding-top: 70px;
+          padding-bottom: 60px;
         }
 
         .picker-title {
-          font-size: 42px;
-        }
-
-        .options-row {
-          max-width: 360px;
+          font-size: clamp(45px, 13vw, 70px);
         }
       }
     `}</style>
