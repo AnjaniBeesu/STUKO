@@ -1,10 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
 export default function SiteChrome({ children }: { children: React.ReactNode }) {
   const [profileOpen, setProfileOpen] = useState(false);
+  const pathname = usePathname();
+  const isLegalPage = pathname === '/privacy' || pathname === '/terms' || pathname === '/cookies';
 
   return (
     <main className="stuko-site">
@@ -35,7 +38,14 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
         </div>
       </header>
 
-      <section className="stuko-content">{children}</section>
+      <section className={`stuko-content${isLegalPage ? ' legal-page-content' : ''}`}>
+        {isLegalPage && (
+          <button className="legal-back" type="button" onClick={() => window.history.back()}>
+            ← back
+          </button>
+        )}
+        {children}
+      </section>
 
       <footer className="stuko-footer">
         <Link href="/privacy">privacy policy</Link>
@@ -156,7 +166,10 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
         .stuko-content .legal-article {
           width: min(900px, 100%);
           margin: 0 auto;
-          padding: 0;
+          padding: 38px 48px;
+          box-sizing: border-box;
+          border-radius: 24px;
+          background: rgba(255, 255, 255, 0.70);
           line-height: 1.7;
         }
         .stuko-content .legal-article h1 { margin-top: 0; line-height: 1.1; }
@@ -165,6 +178,22 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
         .stuko-content .legal-article p,
         .stuko-content .legal-article ul { margin-top: 0.8em; }
         .stuko-content .legal-article li { margin: 0.35em 0; }
+        .legal-page-content { padding-top: 104px; }
+        .legal-back {
+          display: block;
+          width: min(900px, 100%);
+          margin: 0 auto 14px;
+          padding: 0;
+          border: 0;
+          background: transparent;
+          color: #090909;
+          font: inherit;
+          font-size: 15px;
+          line-height: 1.2;
+          text-align: left;
+          cursor: pointer;
+        }
+        .legal-back:hover { text-decoration: underline; text-underline-offset: 4px; }
         .stuko-footer {
           left: 0 !important;
           right: 0 !important;
@@ -188,6 +217,9 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
           .stuko-brand { font-size: 20px; }
           .stuko-logo { width: 23px; height: 23px; font-size: 20px; }
           .stuko-content { padding: 98px 18px 96px; }
+          .legal-page-content { padding-top: 86px; }
+          .stuko-content .legal-article { padding: 28px 22px; border-radius: 18px; }
+          .legal-back { margin-bottom: 10px; }
           .stuko-footer { min-height: 58px; padding: 0 16px; gap: 16px; flex-wrap: wrap; }
           .stuko-footer a { font-size: 11px; }
         }
