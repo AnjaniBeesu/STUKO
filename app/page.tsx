@@ -148,7 +148,7 @@ function ReferenceStyles() {
         inset: 0;
         z-index: 0;
         pointer-events: none;
-        background-image: url('/stuko-clouds.jpg');
+        background-image: url('/clouds.png');
         background-position: center center;
         background-size: cover;
         background-repeat: no-repeat;
