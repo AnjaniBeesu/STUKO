@@ -11,9 +11,14 @@ export const metadata: Metadata = {
   description: 'An interest-first all-in-one study workspace.',
 };
 
+const themeBootstrap = `(() => { try { const t = localStorage.getItem('stuko-theme'); document.documentElement.dataset.theme = t === 'dark' ? 'dark' : 'light'; } catch (_) { document.documentElement.dataset.theme = 'light'; } })()`;
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
+      </head>
       <body>
         <ThemeProvider>
           <InitialLoader />
