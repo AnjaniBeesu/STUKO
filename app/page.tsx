@@ -10,7 +10,14 @@ type Profile = {
   username?: string;
 };
 
-const options = ['pomodoro timer', 'enter study room', 'flashcards maker', 'quiz maker', 'summarizer', 'your library'];
+const options = [
+  { label: 'pomodoro timer', href: '/pomodoro' },
+  { label: 'enter study room', href: '/study-room' },
+  { label: 'flashcards maker', href: '/flashcards' },
+  { label: 'quiz maker', href: '/quiz' },
+  { label: 'summarizer', href: '/summarizer' },
+  { label: 'your library', href: '/library' },
+];
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
@@ -79,10 +86,10 @@ export default function HomePage() {
       <section className="options-panel">
         <p className="options-kicker">welcome, {username}</p>
         <h1 className="picker-title">lets start grademaxxing</h1>
-        <p className="picker-subtitle">choose as many as you like.</p>
+        <p className="picker-subtitle">start studying</p>
         <div className="options-row" aria-label="options">
           {options.map((option) => (
-            <button key={option} type="button" className="option-chip">{option}</button>
+            <Link key={option.href} href={option.href} className="option-chip">{option.label}</Link>
           ))}
         </div>
       </section>
@@ -122,7 +129,7 @@ function ReferenceStyles() {
       .picker-title { margin: 0; max-width: 1060px; font-size: clamp(58px, 5.9vw, 94px); font-weight: 400; line-height: 0.98; letter-spacing: -0.065em; }
       .picker-subtitle { margin: 28px 0 0; font-size: 20px; line-height: 1.2; letter-spacing: -0.025em; }
       .options-row { width: 100%; margin-top: 55px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px 14px; }
-      .option-chip { appearance: none; padding: 12px 21px 13px; border: 1px solid rgba(40, 40, 40, 0.20); border-radius: 999px; background: rgba(255, 255, 255, 0.14); color: #111; cursor: pointer; font-size: 18px; line-height: 1; letter-spacing: -0.025em; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); transition: border-color 180ms ease, background 180ms ease, transform 180ms ease; }
+      .option-chip { appearance: none; display: inline-flex; align-items: center; justify-content: center; padding: 12px 21px 13px; border: 1px solid rgba(40, 40, 40, 0.20); border-radius: 999px; background: rgba(255, 255, 255, 0.14); color: #111; cursor: pointer; font-size: 18px; line-height: 1; letter-spacing: -0.025em; text-decoration: none; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); transition: border-color 180ms ease, background 180ms ease, transform 180ms ease; }
       .option-chip:hover { background: rgba(255, 255, 255, 0.34); border-color: rgba(20, 20, 20, 0.35); transform: translateY(-1px); }
       .stuko-footer { left: 0 !important; right: 0 !important; bottom: 0 !important; min-height: 64px; padding: 0 42px; align-items: center; justify-content: center; gap: 30px; border-top: 1px solid rgba(0, 0, 0, 0.08); }
       .stuko-footer a { color: #090909; text-decoration: none; font-size: 13px; line-height: 1; }
