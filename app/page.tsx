@@ -146,9 +146,12 @@ function ReferenceStyles() {
       .reference-clouds {
         position: fixed;
         inset: 0;
-        z-index: -1;
+        z-index: 0;
         pointer-events: none;
-        background: #fff url('/stuko-clouds.jpg') center center / cover no-repeat;
+        background-image: url('/stuko-clouds.jpg');
+        background-position: center center;
+        background-size: cover;
+        background-repeat: no-repeat;
         opacity: 0.30;
       }
 
