@@ -68,6 +68,13 @@
   --toggle-size: 13px !important;
 }
 
+/* Dark mode uses the uploaded dark cloud artwork instead of filtering the light image. */
+.stuko-site.stuko-dark .stuko-clouds {
+  background-image: url('/dark%20clouds.jpg') !important;
+  opacity: 0.30 !important;
+  filter: none !important;
+}
+
 .stuko-main {
   width: calc(100% - 48px) !important;
   max-width: 980px !important;
