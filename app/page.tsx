@@ -156,7 +156,9 @@ function ReferenceStyles() {
       html,
       body {
         margin: 0;
+        padding: 0;
         min-height: 100%;
+        width: 100%;
         background: #fff;
       }
 
@@ -172,6 +174,8 @@ function ReferenceStyles() {
         position: relative;
         min-height: 100svh;
         width: 100%;
+        margin: 0;
+        padding: 0;
         overflow-x: hidden;
         isolation: isolate;
         color: #090909;
@@ -193,11 +197,15 @@ function ReferenceStyles() {
         opacity: 0.30;
       }
 
+      /* Full-bleed bars: deliberately escape any parent/container width. */
       .stuko-header,
       .stuko-footer {
         position: relative;
         z-index: 5;
-        width: 100%;
+        width: 100vw;
+        max-width: 100vw;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
         box-sizing: border-box;
         background: rgba(255, 255, 255, 0.85);
         backdrop-filter: blur(10px);
