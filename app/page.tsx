@@ -10,11 +10,10 @@ type Profile = {
   username?: string;
 };
 
-const options = ['bouquet', 'letter', 'drawing', 'tune', 'avatars', 'pictures', 'little world'];
+const options = ['pomodoro timer', 'enter study room', 'flashcards maker', 'quiz maker', 'summarizer', 'your library'];
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<string[]>([]);
   const [profileOpen, setProfileOpen] = useState(false);
   const [username, setUsername] = useState('');
 
@@ -43,10 +42,6 @@ export default function HomePage() {
       setLoading(false);
     });
   }, []);
-
-  const toggleOption = (option: string) => {
-    setSelected((current) => current.includes(option) ? current.filter((item) => item !== option) : [...current, option]);
-  };
 
   if (loading) {
     return (
@@ -82,18 +77,14 @@ export default function HomePage() {
       </header>
 
       <section className="options-panel">
-        <p className="options-kicker">let's make something little</p>
-        <h1 className="picker-title">select what you want<br />your beloved to see.</h1>
+        <p className="options-kicker">welcome, {username}</p>
+        <h1 className="picker-title">lets start grademaxxing</h1>
         <p className="picker-subtitle">choose as many as you like.</p>
         <div className="options-row" aria-label="options">
-          {options.map((option) => {
-            const isSelected = selected.includes(option);
-            return (
-              <button key={option} type="button" className={`option-chip${isSelected ? ' selected' : ''}`} aria-pressed={isSelected} onClick={() => toggleOption(option)}>{option}</button>
-            );
-          })}
+          {options.map((option) => (
+            <button key={option} type="button" className="option-chip">{option}</button>
+          ))}
         </div>
-        <button className="continue-button" type="button" disabled={selected.length === 0}>{selected.length === 0 ? 'choose something first' : 'continue'}</button>
       </section>
 
       <footer className="stuko-footer">
@@ -133,10 +124,6 @@ function ReferenceStyles() {
       .options-row { width: 100%; margin-top: 55px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px 14px; }
       .option-chip { appearance: none; padding: 12px 21px 13px; border: 1px solid rgba(40, 40, 40, 0.20); border-radius: 999px; background: rgba(255, 255, 255, 0.14); color: #111; cursor: pointer; font-size: 18px; line-height: 1; letter-spacing: -0.025em; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); transition: border-color 180ms ease, background 180ms ease, transform 180ms ease; }
       .option-chip:hover { background: rgba(255, 255, 255, 0.34); border-color: rgba(20, 20, 20, 0.35); transform: translateY(-1px); }
-      .option-chip.selected { border-color: #111; background: rgba(255, 255, 255, 0.28); }
-      .continue-button { margin-top: 45px; padding: 14px 29px 15px; border: 1px solid rgba(40, 40, 40, 0.20); border-radius: 999px; background: rgba(255, 255, 255, 0.12); color: rgba(25, 25, 25, 0.30); cursor: pointer; font-size: 17px; line-height: 1; }
-      .continue-button:not(:disabled) { color: #111; background: rgba(255, 255, 255, 0.36); cursor: pointer; }
-      .continue-button:disabled { cursor: not-allowed; }
       .stuko-footer { left: 0 !important; right: 0 !important; bottom: 0 !important; min-height: 64px; padding: 0 42px; align-items: center; justify-content: center; gap: 30px; border-top: 1px solid rgba(0, 0, 0, 0.08); }
       .stuko-footer a { color: #090909; text-decoration: none; font-size: 13px; line-height: 1; }
       .stuko-footer a:hover { text-decoration: underline; text-underline-offset: 3px; }
