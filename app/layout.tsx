@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import './comix.css';
+import './stuko-home-fix.css';
 import ThemeProvider from './theme-provider';
 import ThemeMenu from './theme-menu';
 import InitialLoader from '../components/InitialLoader';
