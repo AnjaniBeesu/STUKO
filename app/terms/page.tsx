@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import SiteChrome from '@/app/components/SiteChrome';
 
 export const metadata: Metadata = {
   title: 'Terms and Conditions — Stuko',
@@ -7,18 +8,13 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <main style={{ maxWidth: '900px', margin: '0 auto', padding: '120px 24px 80px', lineHeight: 1.7 }}>
-      <article>
+    <SiteChrome>
+      <article className="legal-article">
         <h1>Terms and Conditions for Stuko</h1>
         <p><strong>Effective Date:</strong> September 2026</p>
         <p><strong>Last Updated:</strong> December 2026</p>
-
-        <p>
-          Welcome to Stuko! These Terms and Conditions (“Terms”) govern your access to and use of the Stuko study website and any related features, tools, or services (collectively, the “Service”). Stuko is a publicly accessible educational study platform operated by <strong>Anjani Beesu</strong>, based in <strong>India</strong>, as part of a college project.
-        </p>
-        <p>
-          By accessing or using Stuko, you agree to be bound by these Terms. If you do not agree, please do not use the Service.
-        </p>
+        <p>Welcome to Stuko! These Terms and Conditions (“Terms”) govern your access to and use of the Stuko study website and any related features, tools, or services (collectively, the “Service”). Stuko is a publicly accessible educational study platform operated by <strong>Anjani Beesu</strong>, based in <strong>India</strong>, as part of a college project.</p>
+        <p>By accessing or using Stuko, you agree to be bound by these Terms. If you do not agree, please do not use the Service.</p>
 
         <h2>1. About Stuko</h2>
         <p>Stuko is a publicly accessible educational study platform operated by <strong>Anjani Beesu</strong>, based in <strong>India</strong>, as part of a college project. It is not an official service of any college or university unless expressly stated.</p>
@@ -34,37 +30,20 @@ export default function TermsPage() {
 
         <h2>4. Your Account</h2>
         <p>If you create an account on Stuko, you are responsible for:</p>
-        <ul>
-          <li>Maintaining the confidentiality of your login credentials.</li>
-          <li>All activity that occurs under your account.</li>
-          <li>Ensuring that the information you provide is accurate and up to date.</li>
-        </ul>
+        <ul><li>Maintaining the confidentiality of your login credentials.</li><li>All activity that occurs under your account.</li><li>Ensuring that the information you provide is accurate and up to date.</li></ul>
         <p>You may not share your account with anyone else or allow others to access the Service using your credentials. If you suspect unauthorised access to your account, contact us immediately at <strong>anjanibeesu@gmail.com</strong>.</p>
         <p>We reserve the right to suspend or terminate accounts that violate these Terms.</p>
 
         <h2>5. Acceptable Use</h2>
         <p>You agree to use Stuko only for lawful, educational purposes. You must not:</p>
-        <ul>
-          <li>Use the Service in any way that violates applicable laws or regulations.</li>
-          <li>Upload, post, or share content that is unlawful, harmful, threatening, abusive, defamatory, or otherwise objectionable.</li>
-          <li>Attempt to gain unauthorised access to the Service, other users’ accounts, or our systems.</li>
-          <li>Interfere with or disrupt the operation of the Service, including by transmitting viruses or malicious code.</li>
-          <li>Scrape, copy, or download content from Stuko in bulk without permission.</li>
-          <li>Use the Service to send spam or unsolicited communications.</li>
-          <li>Impersonate another person or misrepresent your affiliation with anyone.</li>
-          <li>Use the Service in any manner that could damage, disable, or impair Stuko or interfere with other users’ enjoyment of the Service.</li>
-        </ul>
+        <ul><li>Use the Service in any way that violates applicable laws or regulations.</li><li>Upload, post, or share content that is unlawful, harmful, threatening, abusive, defamatory, or otherwise objectionable.</li><li>Attempt to gain unauthorised access to the Service, other users’ accounts, or our systems.</li><li>Interfere with or disrupt the operation of the Service, including by transmitting viruses or malicious code.</li><li>Scrape, copy, or download content from Stuko in bulk without permission.</li><li>Use the Service to send spam or unsolicited communications.</li><li>Impersonate another person or misrepresent your affiliation with anyone.</li><li>Use the Service in any manner that could damage, disable, or impair Stuko or interfere with other users’ enjoyment of the Service.</li></ul>
         <p>We reserve the right to remove any content or suspend any account that violates these rules.</p>
 
         <h2>6. User Content</h2>
         <p>“User Content” means any material you upload, submit, or create on Stuko, including notes, flashcards, quiz responses, and other study materials.</p>
         <p>You retain ownership of your User Content. By submitting User Content, you grant Stuko a limited, non-exclusive, royalty-free licence to host, store, display, and use your User Content solely for the purpose of providing the Service to you.</p>
         <p>You represent and warrant that:</p>
-        <ul>
-          <li>You own or have the necessary rights to all User Content you submit.</li>
-          <li>Your User Content does not infringe the intellectual property, privacy, or other rights of any third party.</li>
-          <li>Your User Content complies with these Terms and applicable law.</li>
-        </ul>
+        <ul><li>You own or have the necessary rights to all User Content you submit.</li><li>Your User Content does not infringe the intellectual property, privacy, or other rights of any third party.</li><li>Your User Content complies with these Terms and applicable law.</li></ul>
         <p>We do not claim ownership over your User Content, but we need these limited rights to operate the Service.</p>
 
         <h2>7. Intellectual Property</h2>
@@ -79,31 +58,17 @@ export default function TermsPage() {
 
         <h2>10. Disclaimer of Warranties</h2>
         <p>Stuko is provided on an “as is” and “as available” basis. We make no warranties, express or implied, regarding the Service, including but not limited to:</p>
-        <ul>
-          <li>The accuracy, reliability, or completeness of any content.</li>
-          <li>The availability or uninterrupted operation of the Service.</li>
-          <li>The suitability of the Service for any particular purpose.</li>
-        </ul>
+        <ul><li>The accuracy, reliability, or completeness of any content.</li><li>The availability or uninterrupted operation of the Service.</li><li>The suitability of the Service for any particular purpose.</li></ul>
         <p>Your use of Stuko is at your own risk. We do not guarantee that the Service will be error-free, secure, or free of harmful components.</p>
 
         <h2>11. Limitation of Liability</h2>
         <p>To the maximum extent permitted by applicable law, <strong>Anjani Beesu</strong> shall not be liable for any indirect, incidental, special, consequential, or exemplary damages arising from or related to your use of Stuko, including but not limited to:</p>
-        <ul>
-          <li>Loss of data or study materials.</li>
-          <li>Service interruptions or downtime.</li>
-          <li>Errors or inaccuracies in content.</li>
-          <li>Unauthorised access to your account or data.</li>
-        </ul>
+        <ul><li>Loss of data or study materials.</li><li>Service interruptions or downtime.</li><li>Errors or inaccuracies in content.</li><li>Unauthorised access to your account or data.</li></ul>
         <p>Because Stuko is a non-commercial educational project, any liability on the part of the operator shall be limited to the fullest extent permitted by Indian law.</p>
 
         <h2>12. Indemnity</h2>
         <p>You agree to indemnify and hold harmless <strong>Anjani Beesu</strong> from any claims, damages, losses, or expenses (including reasonable legal fees) arising from:</p>
-        <ul>
-          <li>Your use of the Service.</li>
-          <li>Your violation of these Terms.</li>
-          <li>Your violation of any rights of a third party.</li>
-          <li>Any User Content you submit.</li>
-        </ul>
+        <ul><li>Your use of the Service.</li><li>Your violation of these Terms.</li><li>Your violation of any rights of a third party.</li><li>Any User Content you submit.</li></ul>
 
         <h2>13. Termination</h2>
         <p>We may suspend or terminate your access to Stuko at any time, with or without notice, if we believe you have violated these Terms or if continued access could harm the Service or other users.</p>
@@ -123,6 +88,6 @@ export default function TermsPage() {
         <p>For any questions about these Terms, contact:</p>
         <p><strong>Anjani Beesu</strong><br /><strong>Email:</strong> anjanibeesu@gmail.com<br /><strong>Location:</strong> India</p>
       </article>
-    </main>
+    </SiteChrome>
   );
 }
