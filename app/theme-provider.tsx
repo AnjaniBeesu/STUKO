@@ -1,25 +1,32 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 export type ThemeName = 'system' | 'light' | 'dark' | 'pink' | 'purple';
 
+const VALID_THEMES: ThemeName[] = ['system', 'light', 'dark', 'pink', 'purple'];
+
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<ThemeName>('system');
+  const [theme, setTheme] = useState<ThemeName>('light');
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('stuko-theme') as ThemeName | null;
-    if (saved && ['system','light','dark','pink','purple'].includes(saved)) setTheme(saved);
+    if (saved && VALID_THEMES.includes(saved)) setTheme(saved);
+    setReady(true);
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
     document.documentElement.dataset.theme = theme;
     localStorage.setItem('stuko-theme', theme);
-  }, [theme]);
+  }, [theme, ready]);
 
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
-      if (event.key === 'stuko-theme' && event.newValue) setTheme(event.newValue as ThemeName);
+      if (event.key === 'stuko-theme' && event.newValue && VALID_THEMES.includes(event.newValue as ThemeName)) {
+        setTheme(event.newValue as ThemeName);
+      }
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
@@ -28,10 +35,8 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
   return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
 }
 
-import { createContext, useContext } from 'react';
-
 const ThemeContext = createContext<{ theme: ThemeName; setTheme: (theme: ThemeName) => void }>({
-  theme: 'system',
+  theme: 'light',
   setTheme: () => {},
 });
 
