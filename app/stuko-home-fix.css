@@ -63,6 +63,11 @@
   margin-bottom: 0 !important;
 }
 
+/* Keep the day/night switch compact in the header without changing its design or behavior. */
+.theme-switch {
+  --toggle-size: 13px !important;
+}
+
 .stuko-main {
   width: calc(100% - 48px) !important;
   max-width: 980px !important;
