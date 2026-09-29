@@ -6,6 +6,7 @@ import './stuko-dark-cloud-fix.css';
 import ThemeProvider from './theme-provider';
 import ThemeMenu from './theme-menu';
 import InitialLoader from '../components/InitialLoader';
+import GlobalBackButton from './components/GlobalBackButton';
 
 export const metadata: Metadata = {
   title: 'STUKO — Study, but make it yours.',
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <ThemeProvider>
           <InitialLoader />
+          <GlobalBackButton />
           {children}
           <ThemeMenu />
         </ThemeProvider>
