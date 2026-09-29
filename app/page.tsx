@@ -21,8 +21,8 @@ const options = [
 const extraOptions = [
   { label: 'exam mode', href: '/exam-mode' },
   { label: 'make notes & save notes', href: '/notes' },
-  { label: 'search notes by title', href: '/note-search' },
-  { label: 'upload & annotate', href: '/document-reader' },
+  { label: 'search other peoples notes', href: '/note-search' },
+  { label: 'upload pdf · word · ppt + annotate', href: '/document-reader' },
 ];
 
 export default function HomePage() {
