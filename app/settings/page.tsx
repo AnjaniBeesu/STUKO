@@ -5,6 +5,7 @@ import { deleteDoc, doc, getDoc, runTransaction, serverTimestamp } from 'firebas
 import { deleteUser, onAuthStateChanged, reauthenticateWithPopup, signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { firebaseConfigured, getFirebase, googleProvider } from '../../lib/firebase';
+import SiteChrome from '@/app/components/SiteChrome';
 import styles from './settings.module.css';
 
 type Profile = { username: string; displayName: string; bio?: string; usernameChangedAt?: { seconds?: number } | null };
@@ -105,31 +106,33 @@ export default function SettingsPage() {
     } finally { setDeleting(false); }
   }
 
-  if (loading) return <main className={styles.page}><div className={styles.loading}>Loading settings…</div></main>;
+  if (loading) return <SiteChrome><main className={styles.page}><div className={styles.loading}>Loading settings…</div></main></SiteChrome>;
 
   return (
-    <main className={styles.page}>
-      <div className={styles.wrap}>
-        <header className={styles.header}><button className={styles.back} onClick={() => router.back()}>←</button><div><p className={styles.eyebrow}>STUKO / SETTINGS</p><h1>Settings</h1></div></header>
-        <section className={styles.card}>
-          <div className={styles.sectionHead}><div><h2>Account</h2><p>Keep your STUKO identity up to date.</p></div></div>
-          <label className={styles.field}>Username <small>{usernameLocked ? `Locked until ${nextChange}` : 'You can change this once every 12 months.'}</small><input className={styles.input} value={username} onChange={e => setUsername(e.target.value)} disabled={usernameLocked} maxLength={30}/></label>
-          <label className={styles.field}>Display name <small>You can change this anytime.</small><input className={styles.input} value={displayName} onChange={e => setDisplayName(e.target.value)} maxLength={60}/></label>
-          <label className={styles.field}>Bio <small>You can change this anytime. Keep it under 160 characters.</small><textarea className={styles.input} value={bio} onChange={e => setBio(e.target.value)} maxLength={160} rows={4} placeholder="Tell people a little about you…" /></label>
-          <button className={styles.primary} onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button>
-          {message && <p className={styles.message}>{message}</p>}
-        </section>
+    <SiteChrome>
+      <main className={styles.page}>
+        <div className={styles.wrap}>
+          <header className={styles.header}><button className={styles.back} onClick={() => router.back()}>←</button><div><p className={styles.eyebrow}>STUKO / SETTINGS</p><h1>Settings</h1></div></header>
+          <section className={styles.card}>
+            <div className={styles.sectionHead}><div><h2>Account</h2><p>Keep your STUKO identity up to date.</p></div></div>
+            <label className={styles.field}>Username <small>{usernameLocked ? `Locked until ${nextChange}` : 'You can change this once every 12 months.'}</small><input className={styles.input} value={username} onChange={e => setUsername(e.target.value)} disabled={usernameLocked} maxLength={30}/></label>
+            <label className={styles.field}>Display name <small>You can change this anytime.</small><input className={styles.input} value={displayName} onChange={e => setDisplayName(e.target.value)} maxLength={60}/></label>
+            <label className={styles.field}>Bio <small>You can change this anytime. Keep it under 160 characters.</small><textarea className={styles.input} value={bio} onChange={e => setBio(e.target.value)} maxLength={160} rows={4} placeholder="Tell people a little about you…" /></label>
+            <button className={styles.primary} onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button>
+            {message && <p className={styles.message}>{message}</p>}
+          </section>
 
-        <section className={styles.card}>
-          <div className={styles.sectionHead}><div><h2>Session</h2><p>Sign out of STUKO on this device.</p></div></div>
-          <button className={styles.secondary} onClick={logout}>Log out</button>
-        </section>
+          <section className={styles.card}>
+            <div className={styles.sectionHead}><div><h2>Session</h2><p>Sign out of STUKO on this device.</p></div></div>
+            <button className={styles.secondary} onClick={logout}>Log out</button>
+          </section>
 
-        <section className={`${styles.card} ${styles.danger}`}>
-          <div className={styles.sectionHead}><div><h2>Delete account</h2><p>This permanently removes your STUKO account and profile data.</p></div></div>
-          {!dangerOpen ? <button className={styles.deleteButton} onClick={() => setDangerOpen(true)}>Delete account</button> : <div className={styles.confirm}><strong>This cannot be undone.</strong><p>Your profile and account will be permanently deleted.</p><div className={styles.actions}><button className={styles.cancel} onClick={() => setDangerOpen(false)}>Keep account</button><button className={styles.deleteButton} onClick={removeAccount} disabled={deleting}>{deleting ? 'Deleting…' : 'Yes, delete my account'}</button></div></div>}
-        </section>
-      </div>
-    </main>
+          <section className={`${styles.card} ${styles.danger}`}>
+            <div className={styles.sectionHead}><div><h2>Delete account</h2><p>This permanently removes your STUKO account and profile data.</p></div></div>
+            {!dangerOpen ? <button className={styles.deleteButton} onClick={() => setDangerOpen(true)}>Delete account</button> : <div className={styles.confirm}><strong>This cannot be undone.</strong><p>Your profile and account will be permanently deleted.</p><div className={styles.actions}><button className={styles.cancel} onClick={() => setDangerOpen(false)}>Keep account</button><button className={styles.deleteButton} onClick={removeAccount} disabled={deleting}>{deleting ? 'Deleting…' : 'Yes, delete my account'}</button></div></div>}
+          </section>
+        </div>
+      </main>
+    </SiteChrome>
   );
 }
