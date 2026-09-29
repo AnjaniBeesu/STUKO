@@ -5,6 +5,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { firebaseConfigured, getFirebase } from '../../lib/firebase';
 import { useRouter } from 'next/navigation';
+import SiteChrome from '@/app/components/SiteChrome';
 
 export default function ProfilePage(){
  const router=useRouter();
@@ -18,5 +19,5 @@ export default function ProfilePage(){
    if(username) router.replace(`/u/${username}`); else router.replace('/onboarding');
   });
  },[router]);
- return <main style={{minHeight:'100vh',display:'grid',placeItems:'center',fontFamily:'Arial,sans-serif',color:'#151515'}}>Opening your public profile…</main>;
+ return <SiteChrome><main style={{minHeight:'calc(100svh - 140px)',display:'grid',placeItems:'center',fontFamily:'Arial,sans-serif',color:'var(--page-text)'}}>Opening your public profile…</main></SiteChrome>;
 }
