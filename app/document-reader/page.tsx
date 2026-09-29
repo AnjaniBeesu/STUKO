@@ -36,7 +36,7 @@ export default function DocumentReaderPage() {
         setText(result.value);
       } else if (ext === 'pdf') {
         const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
-        const pdf = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()), disableWorker: true }).promise;
+        const pdf = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
         const pages: string[] = [];
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
@@ -98,49 +98,45 @@ export default function DocumentReaderPage() {
           <p className="sub">PDFs, Word documents and PowerPoints — read them, listen to them, and mark them up.</p>
 
           <label className="drop">
-            <input type="file" accept=".pdf,.docx,.pptx,.txt" onChange={e => e.target.files?.[0] && loadFile(e.target.files[0])} />
-            <strong>{busy ? 'reading…' : 'choose a document'}</strong>
-            <span>PDF · DOCX · PPTX · TXT</span>
+            <input
+              type="file"
+              accept=".pdf,.docx,.pptx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void loadFile(file);
+              }}
+            />
+            <span>{busy ? 'reading…' : 'choose a PDF, Word document, PowerPoint, or text file'}</span>
           </label>
 
-          {selected && <div className="file-name">{selected.file.name}</div>}
-          {status && <p className="status">{status}</p>}
+          {selected && <p className="file-name">{selected.file.name}</p>}
+          {status && <p className="reader-status">{status}</p>}
 
-          <div className="toolbar" aria-label="annotation tools">
-            <button onClick={() => format('bold')}>bold</button>
-            <button onClick={() => format('underline')}>underline</button>
-            <button onClick={() => format('hiliteColor', '#fff29a')}>highlight</button>
-            <button onClick={speak}>{speaking ? 'speaking…' : 'text to speech'}</button>
-            <button className="ghost" onClick={stopSpeaking}>stop</button>
+          <div className="reader-toolbar">
+            <button type="button" onClick={() => format('bold')}>bold</button>
+            <button type="button" onClick={() => format('underline')}>underline</button>
+            <button type="button" onClick={() => format('hiliteColor', 'yellow')}>highlight</button>
+            {!speaking ? (
+              <button type="button" onClick={speak}>text to speech</button>
+            ) : (
+              <button type="button" onClick={stopSpeaking}>stop speaking</button>
+            )}
           </div>
 
           <div
             ref={editor}
-            className="editor"
+            className="reader-editor"
             contentEditable
             suppressContentEditableWarning
-            onInput={e => setText(e.currentTarget.innerText)}
-            dangerouslySetInnerHTML={{ __html: text ? text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>') : '' }}
+            onInput={(event) => setText(event.currentTarget.innerText)}
+            dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br />') }}
           />
 
-          {selected?.file.name.toLowerCase().endsWith('.pdf') && (
-            <iframe className="preview" src={selected.url} title="PDF preview" />
+          {selected?.file.type === 'application/pdf' && (
+            <iframe className="pdf-preview" title="PDF preview" src={selected.url} />
           )}
-
-          <p className="hint">Annotations are kept in the editable study area while you work. PDF preview remains available underneath for visual reference.</p>
         </section>
       </main>
-      <style jsx>{`
-        .reader-page{min-height:calc(100svh - 150px);padding:150px 20px 100px;display:grid;place-items:center}
-        .reader-card{width:min(1000px,100%);padding:42px;border:1px solid var(--glass-border);border-radius:30px;background:var(--glass-bg);backdrop-filter:blur(12px);color:var(--page-text)}
-        .kicker{font:12px monospace;letter-spacing:.15em;text-transform:uppercase}.reader-card h1{font-size:clamp(48px,7vw,80px);font-weight:400;letter-spacing:-.07em;margin:10px 0}.sub{opacity:.65;line-height:1.6}
-        .drop{margin-top:28px;border:1px dashed var(--glass-border);border-radius:22px;min-height:130px;display:grid;place-items:center;text-align:center;cursor:pointer;padding:20px}.drop input{display:none}.drop strong{font-size:18px}.drop span{font-size:12px;opacity:.5}
-        .file-name,.status{margin-top:12px;opacity:.65;font-size:13px}.status{opacity:.75}
-        .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.toolbar button{border:1px solid var(--glass-border);border-radius:999px;padding:9px 14px;background:transparent;color:inherit;cursor:pointer}.toolbar button:hover{background:rgba(255,255,255,.12)}.toolbar .ghost{opacity:.7}
-        .editor{min-height:420px;border:1px solid var(--glass-border);border-radius:18px;padding:20px;line-height:1.75;outline:none;background:rgba(255,255,255,.03);white-space:pre-wrap}.editor:empty:before{content:'your extracted text appears here — select text and annotate it…';opacity:.35}
-        .preview{width:100%;height:560px;border:1px solid var(--glass-border);border-radius:18px;margin-top:16px}.hint{font-size:13px;opacity:.55;margin-top:14px;line-height:1.6}
-        @media(max-width:600px){.reader-page{padding:130px 12px 80px}.reader-card{padding:24px;border-radius:24px}.preview{height:430px}}
-      `}</style>
     </SiteChrome>
   );
 }
