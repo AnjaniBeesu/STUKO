@@ -63,9 +63,9 @@
   margin-bottom: 0 !important;
 }
 
-/* Keep the day/night switch the same size as the adjacent profile text. */
+/* Keep the day/night switch compact in the header. */
 .theme-switch {
-  --toggle-size: 16px !important;
+  --toggle-size: 10px !important;
 }
 
 /* Dark mode uses the uploaded dark cloud artwork instead of filtering the light image. */
