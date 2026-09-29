@@ -1,25 +1,47 @@
-/* FINAL dark-mode cloud background fix. */
-.stuko-site.stuko-dark .stuko-clouds {
+/* Dark-mode background: use the uploaded public image directly. */
+.stuko-site.stuko-dark::before {
+  content: "" !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -2 !important;
+  background-color: #111 !important;
   background-image: url("/dark%20clouds.jpg") !important;
   background-position: center center !important;
   background-size: cover !important;
   background-repeat: no-repeat !important;
-  background-color: #111 !important;
-  opacity: 0.62 !important;
+  opacity: 1 !important;
+}
+
+/* Keep the foreground cloud layer from hiding the dark background image. */
+.stuko-site.stuko-dark .stuko-clouds {
+  background-image: none !important;
+  background-color: transparent !important;
+  opacity: 1 !important;
   filter: none !important;
   visibility: visible !important;
   display: block !important;
-  mix-blend-mode: normal !important;
 }
 
-.stuko-site.stuko-dark::before {
-  background: #111 !important;
+/* Dark UI remains black/grey/white while the image stays visible behind it. */
+.stuko-site.stuko-dark {
+  --page-bg: transparent !important;
+  --page-text: #f5f5f5 !important;
+  --glass: rgba(15, 15, 15, 0.88) !important;
+  --glass-soft: rgba(25, 25, 25, 0.78) !important;
+  --line: rgba(255, 255, 255, 0.12) !important;
+  --dropdown: rgba(18, 18, 18, 0.96) !important;
 }
 
-.stuko-site.stuko-dark .stuko-clouds::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.16);
-  pointer-events: none;
+.stuko-site.stuko-dark .stuko-header,
+.stuko-site.stuko-dark .stuko-footer {
+  color: #fff !important;
+  background: rgba(15, 15, 15, 0.88) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.stuko-site.stuko-dark .stuko-header a,
+.stuko-site.stuko-dark .stuko-header button,
+.stuko-site.stuko-dark .stuko-footer a,
+.stuko-site.stuko-dark .legal-back {
+  color: #fff !important;
 }
