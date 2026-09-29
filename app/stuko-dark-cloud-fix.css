@@ -1,28 +1,4 @@
-/* Dark-mode background: use the uploaded public image directly. */
-.stuko-site.stuko-dark::before {
-  content: "" !important;
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: -2 !important;
-  background-color: #111 !important;
-  background-image: url("/dark%20clouds.jpg") !important;
-  background-position: center center !important;
-  background-size: cover !important;
-  background-repeat: no-repeat !important;
-  opacity: 1 !important;
-}
-
-/* Keep the foreground cloud layer from hiding the dark background image. */
-.stuko-site.stuko-dark .stuko-clouds {
-  background-image: none !important;
-  background-color: transparent !important;
-  opacity: 1 !important;
-  filter: none !important;
-  visibility: visible !important;
-  display: block !important;
-}
-
-/* Dark UI remains black/grey/white while the image stays visible behind it. */
+/* STUKO dark-mode background fix — the uploaded image is public/dark clouds.jpg. */
 .stuko-site.stuko-dark {
   --page-bg: transparent !important;
   --page-text: #f5f5f5 !important;
@@ -30,8 +6,39 @@
   --glass-soft: rgba(25, 25, 25, 0.78) !important;
   --line: rgba(255, 255, 255, 0.12) !important;
   --dropdown: rgba(18, 18, 18, 0.96) !important;
+  background-color: #111 !important;
+  background-image: url('/dark%20clouds.jpg') !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
 }
 
+/* Keep the image on its own fixed layer too, so later component styles cannot hide it. */
+.stuko-site.stuko-dark::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -2 !important;
+  background-color: #111 !important;
+  background-image: url('/dark%20clouds.jpg') !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+}
+
+/* The light-mode cloud layer must not sit above the dark image. */
+.stuko-site.stuko-dark .stuko-clouds {
+  background-image: none !important;
+  background-color: transparent !important;
+  opacity: 0 !important;
+  filter: none !important;
+  visibility: hidden !important;
+}
+
+/* Dark header/footer: opaque-ish black with white text. */
 .stuko-site.stuko-dark .stuko-header,
 .stuko-site.stuko-dark .stuko-footer {
   color: #fff !important;
