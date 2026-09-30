@@ -124,6 +124,12 @@ export default function PomodoroPage() {
     setTodoInput('');
   }
 
+  function clearAllTodos() {
+    if (todos.length === 0) return;
+    const confirmed = window.confirm('Clear all tasks from your to-do list?');
+    if (confirmed) setTodos([]);
+  }
+
   return (
     <SiteChrome>
       <section className="pomodoro-page">
@@ -176,7 +182,10 @@ export default function PomodoroPage() {
                 <p className="todo-kicker">while you focus</p>
                 <h2>to-do list</h2>
               </div>
-              <span>{completedTodos}/{todos.length}</span>
+              <div className="todo-heading-actions">
+                <span>{completedTodos}/{todos.length}</span>
+                <button type="button" className="todo-clear" onClick={clearAllTodos} disabled={todos.length === 0}>clear all</button>
+              </div>
             </div>
 
             <form className="todo-form" onSubmit={addTodo}>
@@ -236,6 +245,10 @@ export default function PomodoroPage() {
         .todo-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; }
         .todo-heading h2 { margin: 0; font-size: 36px; font-weight: 400; letter-spacing: -.055em; }
         .todo-heading > span { padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; font-family: 'Courier New', monospace; font-size: 12px; opacity: .72; }
+        .todo-heading-actions { display: flex; align-items: center; gap: 8px; }
+        .todo-clear { border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--page-text); padding: 7px 11px; font: inherit; font-size: 12px; cursor: pointer; opacity: .72; transition: transform 160ms ease, opacity 160ms ease, background 160ms ease; }
+        .todo-clear:hover:not(:disabled) { transform: translateY(-1px); opacity: 1; background: rgba(127,127,127,.10); }
+        .todo-clear:disabled { cursor: not-allowed; opacity: .30; }
         .todo-form { display: flex; gap: 8px; margin: 26px 0 17px; }
         .todo-form input { min-width: 0; flex: 1; border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; background: rgba(255,255,255,.10); color: var(--page-text); font: inherit; outline: none; }
         .todo-form input::placeholder { color: var(--page-text); opacity: .45; }
@@ -250,7 +263,7 @@ export default function PomodoroPage() {
         .todo-delete:hover { opacity: 1; }
         .todo-empty { padding: 40px 10px; text-align: center; line-height: 1.7; opacity: .52; font-size: 14px; }
         .stuko-dark .timer-ring-progress { color: #f5f5f5; }
-        @media (max-width: 780px) { .pomodoro-page { padding-top: 24px; } .pomodoro-grid { grid-template-columns: 1fr; } .timer-card { min-height: auto; } }
+        @media (max-width: 780px) { .pomodoro-page { padding-top: 24px; } .pomodoro-grid { grid-template-columns: 1fr; } .timer-card { min-height: auto; } .todo-heading-actions { flex-wrap: wrap; justify-content: flex-end; } }
       `}</style>
     </SiteChrome>
   );
