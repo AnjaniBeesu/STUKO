@@ -6,6 +6,10 @@ import SiteChrome from '@/app/components/SiteChrome';
 type ReaderFile = { file: File; url: string };
 type Tool = 'select' | 'highlight' | 'underline' | 'bold' | 'annotate' | 'speech';
 type Mark = { id: number; type: 'highlight' | 'underline' | 'note'; x: number; y: number; w: number; h: number; text?: string };
+type Slide = { id: number; html: string };
+
+const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const PPTX = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
 
 export default function DocumentReaderPage() {
   const [selected, setSelected] = useState<ReaderFile | null>(null);
@@ -14,21 +18,37 @@ export default function DocumentReaderPage() {
   const [busy, setBusy] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [tool, setTool] = useState<Tool>('select');
-  const [annotation, setAnnotation] = useState('');
   const [pdfPages, setPdfPages] = useState<number[]>([]);
   const [pdfReady, setPdfReady] = useState(false);
-  const [marks, setMarks] = useState<Record<number, Mark[]>>({});
-  const editor = useRef<HTMLDivElement>(null);
+  const [marks, setMarks] = useState<Record<string, Mark[]>>({});
+  const [slides, setSlides] = useState<Slide[]>([]);
+  const [docxHtml, setDocxHtml] = useState('');
+
   const fileInput = useRef<HTMLInputElement>(null);
   const pdfRoot = useRef<HTMLDivElement>(null);
   const pdfDoc = useRef<any>(null);
   const markId = useRef(0);
-  const drag = useRef<{ page: number; x: number; y: number } | null>(null);
+  const drag = useRef<{ key: string; x: number; y: number } | null>(null);
+  const editor = useRef<HTMLDivElement>(null);
+  const speechSource = useRef<HTMLElement | null>(null);
 
   useEffect(() => () => {
     if (selected?.url) URL.revokeObjectURL(selected.url);
     window.speechSynthesis?.cancel();
   }, [selected?.url]);
+
+  const clearReader = () => {
+    if (selected?.url) URL.revokeObjectURL(selected.url);
+    setSelected(null);
+    setText('');
+    setDocxHtml('');
+    setSlides([]);
+    setPdfPages([]);
+    setPdfReady(false);
+    setMarks({});
+    setStatus('');
+    pdfDoc.current = null;
+  };
 
   const renderPdf = async (file: File) => {
     const pdfjs: any = await import('pdfjs-dist/legacy/build/pdf.mjs');
@@ -36,15 +56,39 @@ export default function DocumentReaderPage() {
     pdfDoc.current = pdf;
     setPdfPages(Array.from({ length: pdf.numPages }, (_, i) => i + 1));
     setPdfReady(true);
-    setStatus(`PDF ready — ${pdf.numPages} page${pdf.numPages === 1 ? '' : 's'}. Use the sidebar to mark the document directly.`);
+    setStatus(`PDF ready — ${pdf.numPages} page${pdf.numPages === 1 ? '' : 's'}.`);
+  };
 
-    const pages: string[] = [];
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      pages.push(content.items.map((item: any) => 'str' in item ? item.str : '').join(' '));
+  const loadDocx = async (file: File) => {
+    const mammoth = await import('mammoth');
+    const result = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
+    setDocxHtml(result.value || '<p>No readable document content.</p>');
+    setText(result.value.replace(/<[^>]+>/g, ' '));
+    setStatus('Word document rendered as a document page. Select text and use the sidebar tools directly.');
+  };
+
+  const loadPptx = async (file: File) => {
+    const JSZip = (await import('jszip')).default;
+    const zip = await JSZip.loadAsync(await file.arrayBuffer());
+    const slideNames = Object.keys(zip.files)
+      .filter(name => /^ppt\/slides\/slide\d+\.xml$/.test(name))
+      .sort((a, b) => Number(a.match(/slide(\d+)/)?.[1] || 0) - Number(b.match(/slide(\d+)/)?.[1] || 0));
+
+    const nextSlides: Slide[] = [];
+    for (let index = 0; index < slideNames.length; index++) {
+      const xml = await zip.files[slideNames[index]].async('text');
+      const doc = new DOMParser().parseFromString(xml, 'application/xml');
+      const paragraphs = Array.from(doc.getElementsByTagName('a:p'))
+        .map(p => Array.from(p.getElementsByTagName('a:t')).map(t => t.textContent || '').join(''))
+        .filter(Boolean);
+      const body = paragraphs.length
+        ? paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('')
+        : '<p class="empty-slide">This slide contains visual elements that are not extractable in the browser preview.</p>';
+      nextSlides.push({ id: index + 1, html: body });
     }
-    setText(pages.join('\n\n'));
+    setSlides(nextSlides);
+    setText(nextSlides.map(s => s.html.replace(/<[^>]+>/g, ' ')).join('\n'));
+    setStatus(`${nextSlides.length} slide${nextSlides.length === 1 ? '' : 's'} rendered as individual slide pages.`);
   };
 
   const loadFile = async (file: File) => {
@@ -52,43 +96,27 @@ export default function DocumentReaderPage() {
     const next = { file, url: URL.createObjectURL(file) };
     setSelected(next);
     setText('');
+    setDocxHtml('');
+    setSlides([]);
     setPdfPages([]);
     setPdfReady(false);
     setMarks({});
-    setStatus('reading your file…');
+    setStatus('opening your document…');
     setBusy(true);
 
     try {
       const ext = file.name.split('.').pop()?.toLowerCase();
-      if (ext === 'txt') {
-        setText(await file.text());
-        setStatus('ready — choose a tool from the side bar.');
-      } else if (ext === 'docx') {
-        const mammoth = await import('mammoth');
-        const result = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
-        setText(result.value);
-        setStatus('Word document loaded.');
-      } else if (ext === 'pdf') {
-        await renderPdf(file);
-      } else if (ext === 'pptx') {
-        const JSZip = (await import('jszip')).default;
-        const zip = await JSZip.loadAsync(await file.arrayBuffer());
-        const slideNames = Object.keys(zip.files)
-          .filter(name => /^ppt\/slides\/slide\d+\.xml$/.test(name))
-          .sort((a, b) => Number(a.match(/slide(\d+)/)?.[1]) - Number(b.match(/slide(\d+)/)?.[1]));
-        const slides: string[] = [];
-        for (const name of slideNames) {
-          const xml = await zip.files[name].async('text');
-          const doc = new DOMParser().parseFromString(xml, 'application/xml');
-          slides.push(Array.from(doc.getElementsByTagName('a:t')).map(node => node.textContent || '').join(' '));
-        }
-        setText(slides.join('\n\n'));
-        setStatus('PowerPoint loaded.');
-      } else {
-        throw new Error('unsupported');
-      }
-    } catch {
-      setStatus('could not extract readable text from this file. You can still use the file preview or paste text below.');
+      if (ext === 'pdf') await renderPdf(file);
+      else if (ext === 'docx') await loadDocx(file);
+      else if (ext === 'pptx') await loadPptx(file);
+      else if (ext === 'txt') {
+        const value = await file.text();
+        setText(value);
+        setStatus('Text file loaded.');
+      } else throw new Error('unsupported');
+    } catch (error) {
+      console.error(error);
+      setStatus('This file could not be rendered in the browser. Try PDF, DOCX, or PPTX.');
     } finally {
       setBusy(false);
     }
@@ -97,10 +125,10 @@ export default function DocumentReaderPage() {
   const renderPdfPage = async (pageNumber: number, canvas: HTMLCanvasElement) => {
     if (!pdfDoc.current) return;
     const page = await pdfDoc.current.getPage(pageNumber);
-    const containerWidth = Math.max(760, Math.min(1050, pdfRoot.current?.clientWidth || 900));
+    const rootWidth = pdfRoot.current?.clientWidth || 980;
+    const targetWidth = Math.min(980, Math.max(720, rootWidth - 30));
     const base = page.getViewport({ scale: 1 });
-    const scale = containerWidth / base.width;
-    const viewport = page.getViewport({ scale });
+    const viewport = page.getViewport({ scale: targetWidth / base.width });
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.floor(viewport.width * dpr);
     canvas.height = Math.floor(viewport.height * dpr);
@@ -114,20 +142,27 @@ export default function DocumentReaderPage() {
 
   useEffect(() => {
     if (!pdfReady) return;
-    const canvases = Array.from(document.querySelectorAll<HTMLCanvasElement>('[data-pdf-page]'));
-    canvases.forEach((canvas) => void renderPdfPage(Number(canvas.dataset.pdfPage), canvas));
+    const render = () => {
+      document.querySelectorAll<HTMLCanvasElement>('[data-pdf-page]').forEach(canvas => {
+        void renderPdfPage(Number(canvas.dataset.pdfPage), canvas);
+      });
+    };
+    render();
+    window.addEventListener('resize', render);
+    return () => window.removeEventListener('resize', render);
   }, [pdfReady, pdfPages]);
 
-  const format = (command: string, value?: string) => {
-    editor.current?.focus();
+  const formatSelection = (command: string, value?: string) => {
     document.execCommand(command, false, value);
+    if (editor.current) setText(editor.current.innerText);
   };
 
   const speak = () => {
-    const source = editor.current?.innerText || text;
-    if (!source.trim() || !window.speechSynthesis) return;
+    const source = speechSource.current || editor.current;
+    const value = source?.innerText || text;
+    if (!value.trim() || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(source);
+    const utterance = new SpeechSynthesisUtterance(value);
     utterance.onstart = () => setSpeaking(true);
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
@@ -139,36 +174,26 @@ export default function DocumentReaderPage() {
     setSpeaking(false);
   };
 
-  const addAnnotation = () => {
-    if (!annotation.trim()) return;
-    const note = document.createElement('div');
-    note.textContent = `📝 ${annotation.trim()}`;
-    note.style.cssText = 'padding:10px 12px;margin:8px 0;background:#fff4b8;border-left:3px solid #d2a900;border-radius:7px;font-size:12px;';
-    editor.current?.appendChild(note);
-    setAnnotation('');
-    setStatus('annotation added.');
-  };
-
   const activateTool = (next: Tool) => {
     setTool(next);
-    if (next === 'highlight') format('hiliteColor', '#fff19a');
-    if (next === 'underline') format('underline');
-    if (next === 'bold') format('bold');
-    if (next === 'speech') (speaking ? stopSpeaking() : speak());
+    if (next === 'highlight') formatSelection('hiliteColor', '#fff19a');
+    if (next === 'underline') formatSelection('underline');
+    if (next === 'bold') formatSelection('bold');
+    if (next === 'speech') speaking ? stopSpeaking() : speak();
   };
 
-  const pageMarks = (page: number) => marks[page] || [];
+  const marksFor = (key: string) => marks[key] || [];
 
-  const beginMark = (page: number, event: React.PointerEvent<HTMLDivElement>) => {
-    if (!pdfReady || tool === 'select' || tool === 'speech') return;
+  const beginMark = (key: string, event: React.PointerEvent<HTMLDivElement>) => {
+    if (tool === 'select' || tool === 'bold' || tool === 'speech') return;
     const rect = event.currentTarget.getBoundingClientRect();
-    drag.current = { page, x: ((event.clientX - rect.left) / rect.width) * 100, y: ((event.clientY - rect.top) / rect.height) * 100 };
+    drag.current = { key, x: ((event.clientX - rect.left) / rect.width) * 100, y: ((event.clientY - rect.top) / rect.height) * 100 };
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  const finishMark = (page: number, event: React.PointerEvent<HTMLDivElement>) => {
+  const finishMark = (key: string, event: React.PointerEvent<HTMLDivElement>) => {
     const start = drag.current;
-    if (!start || start.page !== page) return;
+    if (!start || start.key !== key) return;
     drag.current = null;
     const rect = event.currentTarget.getBoundingClientRect();
     const endX = ((event.clientX - rect.left) / rect.width) * 100;
@@ -177,14 +202,27 @@ export default function DocumentReaderPage() {
     const y = Math.max(0, Math.min(start.y, endY));
     const w = Math.max(1.5, Math.min(100 - x, Math.abs(endX - start.x)));
     const h = Math.max(1.5, Math.min(100 - y, Math.abs(endY - start.y)));
+
     if (tool === 'annotate') {
       const note = window.prompt('Write your annotation:');
       if (!note?.trim()) return;
-      setMarks(prev => ({ ...prev, [page]: [...(prev[page] || []), { id: ++markId.current, type: 'note', x, y, w: 4, h: 4, text: note.trim() }] }));
+      setMarks(prev => ({ ...prev, [key]: [...(prev[key] || []), { id: ++markId.current, type: 'note', x, y, w: 5, h: 5, text: note.trim() }] }));
       return;
     }
-    setMarks(prev => ({ ...prev, [page]: [...(prev[page] || []), { id: ++markId.current, type: tool === 'underline' ? 'underline' : 'highlight', x, y, w, h }] }));
+
+    setMarks(prev => ({
+      ...prev,
+      [key]: [...(prev[key] || []), { id: ++markId.current, type: tool === 'underline' ? 'underline' : 'highlight', x, y, w, h }],
+    }));
   };
+
+  const readerTools = [
+    ['select', '↖', 'select'],
+    ['highlight', '▰', 'highlight'],
+    ['underline', 'U̲', 'underline'],
+    ['annotate', '✎', 'annotate'],
+    ['bold', 'B', 'bold text'],
+  ] as const;
 
   return (
     <SiteChrome>
@@ -195,70 +233,107 @@ export default function DocumentReaderPage() {
           <aside className="reader-sidebar" aria-label="Document tools">
             <p className="reader-side-label">TOOLS</p>
             <button type="button" className="reader-side-upload" onClick={() => fileInput.current?.click()}><span>＋</span> upload file</button>
-            <button type="button" className={tool === 'select' ? 'reader-tool active' : 'reader-tool'} onClick={() => setTool('select')}>↖ <span>select</span></button>
-            <button type="button" className={tool === 'highlight' ? 'reader-tool active' : 'reader-tool'} onClick={() => setTool('highlight')}>▰ <span>highlight</span></button>
-            <button type="button" className={tool === 'underline' ? 'reader-tool active' : 'reader-tool'} onClick={() => setTool('underline')}>U̲ <span>underline</span></button>
-            <button type="button" className={tool === 'annotate' ? 'reader-tool active' : 'reader-tool'} onClick={() => setTool('annotate')}>✎ <span>annotate</span></button>
-            <button type="button" className={tool === 'bold' ? 'reader-tool active' : 'reader-tool'} onClick={() => activateTool('bold')}>B <span>bold text</span></button>
+            {readerTools.map(([id, icon, label]) => (
+              <button key={id} type="button" className={tool === id ? 'reader-tool active' : 'reader-tool'} onClick={() => activateTool(id)}>{icon} <span>{label}</span></button>
+            ))}
             <button type="button" className={tool === 'speech' ? 'reader-tool active' : 'reader-tool'} onClick={() => activateTool('speech')}>{speaking ? '■' : '▶'} <span>{speaking ? 'stop speech' : 'text to speech'}</span></button>
           </aside>
 
           <div className="reader-main">
             <div className="reader-card">
               <div className="reader-heading-row">
-                <div><p className="kicker">study reader</p><h1>upload & annotate</h1><p className="sub">Open your document, make it big, and mark it directly on the page.</p></div>
-                {selected && <span className="reader-type">{selected.file.name.split('.').pop()?.toUpperCase()}</span>}
+                <div>
+                  <p className="kicker">study reader</p>
+                  <h1>upload & annotate</h1>
+                  <p className="sub">Open the actual document, make it large, and use the tools directly on it.</p>
+                </div>
+                {selected && <button className="reader-close" type="button" onClick={clearReader}>clear</button>}
               </div>
 
-              <input ref={fileInput} className="reader-hidden-input" type="file" accept=".pdf,.docx,.pptx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain" onChange={(event) => { const file = event.target.files?.[0]; if (file) void loadFile(file); event.currentTarget.value = ''; }} />
+              <input ref={fileInput} className="reader-hidden-input" type="file" accept=".pdf,.docx,.pptx,.txt,application/pdf,${DOCX},${PPTX},text/plain" onChange={event => { const file = event.target.files?.[0]; if (file) void loadFile(file); event.currentTarget.value = ''; }} />
 
               {!selected ? (
-                <button type="button" className="reader-file-box" onClick={() => fileInput.current?.click()}><span className="reader-upload-icon">↑</span><strong>{busy ? 'reading…' : 'choose your file'}</strong><small>Drop a PDF, Word document, PowerPoint, or text file here</small><em>browse files</em></button>
+                <button type="button" className="reader-file-box" onClick={() => fileInput.current?.click()}>
+                  <span className="reader-upload-icon">↑</span>
+                  <strong>{busy ? 'opening…' : 'choose your file'}</strong>
+                  <small>PDF · Word · PowerPoint · text</small>
+                  <em>browse files</em>
+                </button>
               ) : (
                 <div className="reader-file-selected"><div><strong>{selected.file.name}</strong><span>{Math.max(1, Math.round(selected.file.size / 1024))} KB</span></div><button type="button" onClick={() => fileInput.current?.click()}>choose another</button></div>
               )}
 
               {status && <p className="reader-status">{status}</p>}
 
-              {selected?.file.type === 'application/pdf' && pdfReady ? (
+              {selected?.file.type === 'application/pdf' && pdfReady && (
                 <div className="pdf-viewer" ref={pdfRoot}>
-                  <div className="pdf-help">{tool === 'select' ? 'Select mode — choose a tool to mark the page.' : `${tool} mode — drag directly over the PDF.`}</div>
+                  <div className="viewer-tip">{tool === 'select' ? 'Select mode — select text normally.' : `${tool} mode — drag directly over the document.`}</div>
                   {pdfPages.map(page => (
-                    <div key={page} className="pdf-page-wrap">
-                      <div className="pdf-page-number">page {page}</div>
-                      <div
-                        className={`pdf-page ${tool !== 'select' && tool !== 'speech' ? 'markable' : ''}`}
-                        onPointerDown={(event) => beginMark(page, event)}
-                        onPointerUp={(event) => finishMark(page, event)}
-                      >
+                    <div key={page} className="document-page-wrap">
+                      <div className="page-label">page {page}</div>
+                      <div className="document-page pdf-page" onPointerDown={e => beginMark(`pdf-${page}`, e)} onPointerUp={e => finishMark(`pdf-${page}`, e)}>
                         <canvas data-pdf-page={page} />
-                        <div className="pdf-mark-layer">
-                          {pageMarks(page).map(mark => (
-                            <div key={mark.id} className={`pdf-mark pdf-${mark.type}`} style={{ left: `${mark.x}%`, top: `${mark.y}%`, width: `${mark.w}%`, height: `${mark.h}%` }} title={mark.text || mark.type}>
-                              {mark.type === 'note' && <span>📝</span>}
-                            </div>
-                          ))}
-                        </div>
+                        <MarkLayer marks={marksFor(`pdf-${page}`)} />
                       </div>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <>
-                  {tool === 'annotate' && <div className="annotation-box"><input value={annotation} onChange={(event) => setAnnotation(event.target.value)} placeholder="write an annotation…" onKeyDown={(event) => { if (event.key === 'Enter') addAnnotation(); }} /><button type="button" onClick={addAnnotation}>add note</button></div>}
-                  <div className="reader-editor-wrap"><div ref={editor} className="reader-editor" contentEditable suppressContentEditableWarning data-placeholder="Your extracted text will appear here…" onInput={(event) => setText(event.currentTarget.innerText)} dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br />') }} /></div>
-                </>
+              )}
+
+              {selected?.file.type === DOCX && docxHtml && (
+                <div className="docx-viewer">
+                  <div className="viewer-tip">Word document view — select text for highlight, underline, or bold. Use annotate to place a note on the page.</div>
+                  <div className="document-page docx-page" onPointerDown={e => beginMark('docx', e)} onPointerUp={e => finishMark('docx', e)}>
+                    <article ref={editor} className="docx-content" contentEditable suppressContentEditableWarning onInput={e => setText(e.currentTarget.innerText)} dangerouslySetInnerHTML={{ __html: docxHtml }} />
+                    <MarkLayer marks={marksFor('docx')} />
+                  </div>
+                </div>
+              )}
+
+              {selected?.file.type === PPTX && slides.length > 0 && (
+                <div className="pptx-viewer">
+                  <div className="viewer-tip">PowerPoint view — each slide is separated like a presentation. Select text for formatting or annotate the slide itself.</div>
+                  {slides.map(slide => (
+                    <div key={slide.id} className="slide-wrap">
+                      <div className="page-label">slide {slide.id}</div>
+                      <div className="ppt-slide" onPointerDown={e => beginMark(`slide-${slide.id}`, e)} onPointerUp={e => finishMark(`slide-${slide.id}`, e)}>
+                        <article ref={slide.id === 1 ? speechSource as any : undefined} className="slide-content" contentEditable suppressContentEditableWarning dangerouslySetInnerHTML={{ __html: slide.html }} />
+                        <MarkLayer marks={marksFor(`slide-${slide.id}`)} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selected?.file.type === 'text/plain' && (
+                <div className="document-page text-page" onPointerDown={e => beginMark('text', e)} onPointerUp={e => finishMark('text', e)}>
+                  <article ref={editor} className="text-content" contentEditable suppressContentEditableWarning onInput={e => setText(e.currentTarget.innerText)}>{text}</article>
+                  <MarkLayer marks={marksFor('text')} />
+                </div>
               )}
             </div>
           </div>
         </section>
       </main>
       <style jsx>{`
-        .reader-page{width:min(1280px,100%);margin:0 auto;padding:8px 12px 40px;box-sizing:border-box}.reader-back{border:1px solid var(--line,#ddd);background:var(--glass,rgba(255,255,255,.8));color:var(--page-text,#111);border-radius:999px;padding:8px 13px;font:inherit;font-size:12px;cursor:pointer;margin-bottom:14px}.reader-shell{display:grid;grid-template-columns:170px minmax(0,1fr);gap:14px;align-items:start}.reader-sidebar{position:sticky;top:104px;background:var(--glass,rgba(255,255,255,.85));border:1px solid var(--line,#ddd);border-radius:14px;padding:12px 9px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}.reader-side-label{font-size:8px;letter-spacing:.16em;font-weight:900;color:#999;margin:5px 8px 9px}.reader-side-upload{width:100%;border:0;border-radius:9px;background:var(--page-text,#111);color:var(--page-bg,#fff);padding:10px 9px;font:inherit;font-size:11px;font-weight:800;cursor:pointer;margin-bottom:9px;text-align:left}.reader-side-upload span{font-size:15px;margin-right:6px}.reader-tool{width:100%;display:flex;align-items:center;gap:9px;border:0;background:transparent;color:var(--page-text,#111);border-radius:8px;padding:9px;font:inherit;font-size:11px;cursor:pointer;text-align:left}.reader-tool span{opacity:.75}.reader-tool:hover,.reader-tool.active{background:rgba(127,127,127,.13)}.reader-main{min-width:0}.reader-card{background:var(--glass,rgba(255,255,255,.85));border:1px solid var(--line,#ddd);border-radius:16px;padding:22px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}.reader-heading-row{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.reader-heading-row h1{margin:0;font-size:28px;letter-spacing:-.04em}.reader-type{font-size:9px;font-weight:900;border:1px solid var(--line,#ddd);border-radius:999px;padding:6px 9px}.reader-hidden-input{display:none}.reader-file-box{width:100%;min-height:145px;border:1.5px dashed rgba(127,127,127,.45);border-radius:13px;background:rgba(127,127,127,.06);color:var(--page-text,#111);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;font:inherit;margin-top:18px}.reader-file-box strong{font-size:14px}.reader-file-box small{font-size:10px;color:#888}.reader-file-box em{font-style:normal;font-size:10px;font-weight:800;margin-top:5px}.reader-upload-icon{width:32px;height:32px;border:1px solid var(--line,#ddd);border-radius:50%;display:grid;place-items:center;font-size:18px;margin-bottom:3px}.reader-file-selected{margin-top:18px;border:1px solid var(--line,#ddd);border-radius:11px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}.reader-file-selected div{display:flex;flex-direction:column;gap:3px;min-width:0}.reader-file-selected strong{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.reader-file-selected span{font-size:9px;color:#999}.reader-file-selected button,.annotation-box button{border:1px solid var(--line,#ddd);background:transparent;color:var(--page-text,#111);border-radius:8px;padding:7px 9px;font:inherit;font-size:9px;font-weight:800;cursor:pointer}.reader-status{font-size:10px;color:#888;margin:10px 2px}.annotation-box{display:flex;gap:7px;margin:12px 0}.annotation-box input{flex:1;min-width:0;border:1px solid var(--line,#ddd);background:transparent;color:var(--page-text,#111);border-radius:8px;padding:9px 10px;outline:none;font:inherit;font-size:11px}.annotation-box button{background:var(--page-text,#111);color:var(--page-bg,#fff)}
-        .pdf-viewer{margin-top:16px;padding:14px 10px 24px;background:rgba(0,0,0,.055);border:1px solid var(--line,#ddd);border-radius:13px;overflow:auto;max-height:calc(100vh - 180px);scroll-behavior:smooth}.pdf-help{position:sticky;top:0;z-index:5;width:max-content;max-width:100%;margin:0 auto 12px;padding:7px 11px;border:1px solid var(--line,#ddd);border-radius:999px;background:var(--glass,rgba(255,255,255,.9));font-size:9px;color:#777;backdrop-filter:blur(10px)}.pdf-page-wrap{width:max-content;max-width:100%;margin:0 auto 28px}.pdf-page-number{text-align:center;font-size:9px;color:#888;margin-bottom:6px}.pdf-page{position:relative;width:max-content;max-width:100%;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.15);line-height:0;touch-action:none}.pdf-page canvas{display:block;max-width:100%;height:auto}.pdf-page.markable{cursor:crosshair}.pdf-mark-layer{position:absolute;inset:0;pointer-events:none}.pdf-mark{position:absolute;box-sizing:border-box}.pdf-highlight{background:rgba(255,230,65,.42);border-radius:2px}.pdf-underline{border-bottom:3px solid rgba(235,80,65,.82);min-height:3px}.pdf-note{width:28px!important;height:28px!important;border-radius:50%;background:#ffe77a;border:2px solid #d4aa00;display:grid;place-items:center;box-shadow:0 3px 10px rgba(0,0,0,.2)}.pdf-note span{font-size:15px;line-height:1}
-        .reader-editor-wrap{margin-top:14px}.reader-editor{min-height:320px;max-height:650px;overflow:auto;border:1px solid var(--line,#ddd);border-radius:11px;padding:18px;background:rgba(127,127,127,.035);color:var(--page-text,#111);font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.75;outline:none}.reader-editor:empty:before{content:attr(data-placeholder);color:#999}
-        @media(max-width:720px){.reader-shell{grid-template-columns:1fr}.reader-sidebar{position:static;display:flex;overflow-x:auto;gap:4px;padding:8px}.reader-side-label{display:none}.reader-side-upload,.reader-tool{width:auto;flex:0 0 auto}.reader-tool span{display:none}.reader-card{padding:16px}.reader-heading-row h1{font-size:23px}.reader-file-selected{align-items:flex-start;flex-direction:column}.reader-file-selected button{width:100%}.pdf-viewer{max-height:none;padding:8px 4px}.pdf-page{width:100%}.pdf-page canvas{width:100%!important;height:auto!important}}
+        .reader-page{width:min(1380px,100%);margin:0 auto;padding:8px 12px 48px;box-sizing:border-box}.reader-back,.reader-close{border:1px solid var(--line,#ddd);background:var(--glass,rgba(255,255,255,.8));color:var(--page-text,#111);border-radius:999px;padding:8px 13px;font:inherit;font-size:12px;cursor:pointer}.reader-back{margin-bottom:14px}.reader-shell{display:grid;grid-template-columns:170px minmax(0,1fr);gap:16px;align-items:start}.reader-sidebar{position:sticky;top:104px;background:var(--glass,rgba(255,255,255,.85));border:1px solid var(--line,#ddd);border-radius:14px;padding:12px 9px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:5}.reader-side-label{font-size:8px;letter-spacing:.16em;font-weight:900;color:#999;margin:5px 8px 9px}.reader-side-upload,.reader-tool{width:100%;border:0;border-radius:9px;padding:10px 9px;font:inherit;font-size:11px;font-weight:800;cursor:pointer;margin-bottom:6px;text-align:left}.reader-side-upload{background:var(--page-text,#111);color:var(--page-bg,#fff);margin-bottom:9px}.reader-tool{background:transparent;color:var(--page-text,#111)}.reader-tool:hover,.reader-tool.active{background:rgba(127,127,127,.15)}.reader-tool span{margin-left:6px}.reader-main{min-width:0}.reader-card{background:var(--glass,rgba(255,255,255,.7));border:1px solid var(--line,#ddd);border-radius:20px;padding:22px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}.reader-heading-row{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}.kicker{font-size:9px;text-transform:uppercase;letter-spacing:.16em;font-weight:900;opacity:.55;margin:0 0 5px}.reader-card h1{font-size:clamp(28px,4vw,44px);line-height:1;margin:0;color:var(--page-text,#111)}.sub{font-size:13px;opacity:.62;margin:9px 0 0}.reader-hidden-input{display:none}.reader-file-box{width:100%;min-height:145px;border:1.5px dashed rgba(100,100,100,.35);background:rgba(255,255,255,.45);color:var(--page-text,#111);border-radius:16px;margin-top:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;cursor:pointer}.reader-upload-icon{font-size:28px}.reader-file-box strong{font-size:14px}.reader-file-box small{font-size:11px;opacity:.6}.reader-file-box em{font-style:normal;font-size:11px;font-weight:800;text-decoration:underline}.reader-file-selected{margin-top:20px;border:1px solid var(--line,#ddd);border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:12px;background:rgba(255,255,255,.45)}.reader-file-selected div{display:flex;flex-direction:column;gap:3px}.reader-file-selected strong{font-size:12px}.reader-file-selected span{font-size:10px;opacity:.55}.reader-file-selected button{border:0;background:transparent;text-decoration:underline;font:inherit;font-size:11px;cursor:pointer;color:var(--page-text,#111)}.reader-status{font-size:11px;opacity:.65;margin:12px 2px}.viewer-tip{background:rgba(127,127,127,.09);border:1px solid var(--line,#ddd);border-radius:10px;padding:9px 11px;font-size:10px;margin-bottom:13px}.pdf-viewer,.docx-viewer,.pptx-viewer{margin-top:18px}.document-page-wrap,.slide-wrap{margin-bottom:22px}.page-label{font-size:9px;text-transform:uppercase;letter-spacing:.12em;opacity:.5;font-weight:900;margin:0 0 7px 5px}.document-page{position:relative;width:max-content;max-width:100%;margin:0 auto;background:#fff;color:#111;box-shadow:0 10px 35px rgba(0,0,0,.12);overflow:hidden}.pdf-page{line-height:0}.pdf-page canvas{display:block;max-width:100%;height:auto}.docx-page{width:min(900px,100%);min-height:1100px;padding:60px 70px;box-sizing:border-box;overflow:visible}.docx-content{position:relative;z-index:1;outline:0;min-height:900px;font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.65;color:#1b1b1b}.docx-content :global(img){max-width:100%;height:auto}.docx-content :global(table){max-width:100%;border-collapse:collapse}.docx-content :global(td),.docx-content :global(th){border:1px solid #ccc;padding:5px}.text-page{width:min(900px,100%);min-height:900px;padding:55px;box-sizing:border-box;overflow:visible}.text-content{position:relative;z-index:1;outline:0;white-space:pre-wrap;font-size:15px;line-height:1.65}.ppt-slide{position:relative;width:min(100%,980px);aspect-ratio:16/9;background:#fff;color:#111;box-shadow:0 10px 35px rgba(0,0,0,.12);overflow:hidden;margin:auto}.slide-content{position:absolute;inset:8%;outline:0;font-size:clamp(13px,1.5vw,22px);line-height:1.35;z-index:1}.slide-content :global(p){margin:0 0 .45em}.slide-content :global(.empty-slide){opacity:.45;font-size:12px}.pdf-mark-layer{position:absolute;inset:0;pointer-events:none;z-index:3}.pdf-mark{position:absolute;box-sizing:border-box}.pdf-highlight{background:rgba(255,224,61,.42);border-radius:3px}.pdf-underline{border-bottom:3px solid #e4b800}.pdf-note{width:32px!important;height:32px!important;background:#fff2a8;border:1px solid #d4b63a;border-radius:7px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,.15);font-size:17px}.pdf-note span{display:block}.markable{cursor:crosshair}.docx-page .pdf-mark-layer,.ppt-slide .pdf-mark-layer,.text-page .pdf-mark-layer{pointer-events:none}.reader-close{font-size:11px}@media(max-width:800px){.reader-shell{grid-template-columns:1fr}.reader-sidebar{position:sticky;top:78px;display:flex;gap:5px;overflow-x:auto;padding:8px}.reader-side-label{display:none}.reader-side-upload,.reader-tool{width:auto;white-space:nowrap;margin:0;padding:9px}.reader-card{padding:14px}.docx-page{padding:30px 22px;min-height:700px}.text-page{padding:30px 22px}.reader-heading-row{align-items:center}.reader-close{padding:7px 10px}}
       `}</style>
     </SiteChrome>
   );
+}
+
+function MarkLayer({ marks }: { marks: Mark[] }) {
+  return (
+    <div className="pdf-mark-layer">
+      {marks.map(mark => (
+        <div key={mark.id} className={`pdf-mark pdf-${mark.type}`} style={{ left: `${mark.x}%`, top: `${mark.y}%`, width: `${mark.w}%`, height: `${mark.h}%` }} title={mark.text || mark.type}>
+          {mark.type === 'note' && <span>📝</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char] || char));
 }
