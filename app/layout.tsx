@@ -9,7 +9,7 @@ import InitialLoader from '../components/InitialLoader';
 import GlobalBackButton from './components/GlobalBackButton';
 
 export const metadata: Metadata = {
-  title: 'STUKO — Study, but make it yours.',
+  title: 'STUKO',
   description: 'An interest-first all-in-one study workspace.',
 };
 
