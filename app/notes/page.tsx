@@ -1,11 +1,20 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { addDoc, collection } from 'firebase/firestore';
 import { firebaseConfigured, getFirebase } from '@/lib/firebase';
 import SiteChrome from '@/app/components/SiteChrome';
 
 const fonts = ['Times New Roman', 'Century Gothic', 'Lucida Calligraphy', 'Arial', 'Georgia'];
 const sizes = ['12', '14', '16', '18', '20', '24', '28', '32', '40'];
+
+type SavedNote = {
+  id: string;
+  title: string;
+  body: string;
+  public: boolean;
+  updatedAt: string;
+};
 
 export default function NotesPage() {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -15,7 +24,7 @@ export default function NotesPage() {
   const [status, setStatus] = useState('');
 
   useEffect(() => {
-    const raw = localStorage.getItem('stuko-notes');
+    const raw = localStorage.getItem('stuko-notes-draft');
     if (!raw) return;
     try {
       const n = JSON.parse(raw);
@@ -24,6 +33,17 @@ export default function NotesPage() {
       if (editorRef.current) editorRef.current.innerHTML = n.body || '';
     } catch {}
   }, []);
+
+  useEffect(() => {
+    const saveDraft = () => {
+      const body = editorRef.current?.innerHTML || '';
+      if (title || body) {
+        localStorage.setItem('stuko-notes-draft', JSON.stringify({ title, body, public: publicNote }));
+      }
+    };
+    const timer = window.setTimeout(saveDraft, 250);
+    return () => window.clearTimeout(timer);
+  }, [title, publicNote]);
 
   const command = (cmd: string, value?: string) => {
     editorRef.current?.focus();
@@ -50,21 +70,62 @@ export default function NotesPage() {
 
   const save = async () => {
     const body = editorRef.current?.innerHTML || '';
-    localStorage.setItem('stuko-notes', JSON.stringify({ title, body, public: publicNote, updatedAt: new Date().toISOString() }));
-    if (publicNote && firebaseConfigured() && title.trim() && body.trim()) {
+    const trimmedTitle = title.trim();
+
+    if (!trimmedTitle) {
+      setStatus('give your note a title first');
+      return;
+    }
+    if (!body.replace(/<[^>]*>/g, '').trim()) {
+      setStatus('write something before saving');
+      return;
+    }
+
+    const note: SavedNote = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      title: trimmedTitle,
+      body,
+      public: publicNote,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const raw = localStorage.getItem('stuko-saved-notes');
+    let notes: SavedNote[] = [];
+    try {
+      const parsed = raw ? JSON.parse(raw) : [];
+      notes = Array.isArray(parsed) ? parsed : [];
+    } catch {}
+    localStorage.setItem('stuko-saved-notes', JSON.stringify([note, ...notes]));
+    localStorage.removeItem('stuko-notes-draft');
+
+    if (publicNote && firebaseConfigured()) {
       try {
         const { auth, db } = getFirebase();
         if (auth.currentUser) {
           await addDoc(collection(db, 'notes'), {
-            title: title.trim(), body, authorId: auth.currentUser.uid,
-            authorName: auth.currentUser.displayName || 'Stuko student', createdAt: new Date(), public: true,
+            title: trimmedTitle,
+            body,
+            authorId: auth.currentUser.uid,
+            authorName: auth.currentUser.displayName || 'Stuko student',
+            createdAt: new Date(),
+            public: true,
           });
         }
-      } catch { setStatus('saved locally · public sharing could not be synced'); }
+      } catch {
+        setStatus('saved locally · public sharing could not be synced');
+      }
     }
+
+    // Saving starts a completely fresh note automatically.
+    setTitle('');
+    setPublicNote(false);
+    if (editorRef.current) editorRef.current.innerHTML = '';
     setSaved(true);
-    setStatus(publicNote ? 'saved · public note' : 'saved privately');
-    setTimeout(() => { setSaved(false); setStatus(''); }, 2200);
+    if (!status) setStatus('saved · new note ready');
+    window.setTimeout(() => {
+      setSaved(false);
+      setStatus('');
+    }, 2200);
   };
 
   return <SiteChrome>
@@ -91,8 +152,13 @@ export default function NotesPage() {
 
         <div ref={editorRef} className="editor" contentEditable suppressContentEditableWarning data-placeholder="start writing your notes..." />
 
-        <div className="notes-bottom"><span className="hint">copy/paste text, images, and links directly into your notes</span><button onClick={save}>{saved ? 'saved ✓' : 'save note'}</button></div>
+        <div className="notes-bottom">
+          <span className="hint">copy/paste text, images, and links directly into your notes</span>
+          <button onClick={save}>{saved ? 'saved ✓' : 'save note'}</button>
+        </div>
         {status && <p className="status">{status}</p>}
+
+        <Link className="library-link" href="/library">→ open your notes in library</Link>
       </section>
     </main>
     <style jsx>{`
@@ -102,7 +168,7 @@ export default function NotesPage() {
       .privacy-toggle{display:flex;align-items:center;gap:9px;font:12px Arial;color:#555;white-space:nowrap}.privacy-toggle input{display:none}.privacy-toggle i{width:38px;height:21px;background:#ddd;border-radius:20px;position:relative;cursor:pointer}.privacy-toggle i:after{content:'';position:absolute;width:17px;height:17px;left:2px;top:2px;background:white;border-radius:50%;transition:.2s;box-shadow:0 1px 3px #999}.privacy-toggle input:checked+i{background:#111}.privacy-toggle input:checked+i:after{left:19px}
       .toolbar{display:flex;align-items:center;gap:4px;flex-wrap:wrap;border:1px solid #ddd;background:#f7f7f7;padding:6px;border-radius:10px 10px 0 0}.toolbar button,.toolbar select,.toolbar label{height:31px;min-width:31px;border:1px solid transparent;background:transparent;color:#222;border-radius:5px;padding:4px 7px;cursor:pointer;font:13px Arial}.toolbar button:hover,.toolbar select:hover,.toolbar label:hover{background:#e8e8e8}.toolbar select{min-width:auto;border-color:#ddd;background:white}.toolbar label{position:relative;display:inline-flex;align-items:center;justify-content:center;font-weight:bold}.toolbar label input{position:absolute;opacity:0;width:1px;height:1px}.divider{height:22px;width:1px;background:#ddd;margin:0 4px}
       .editor{min-height:520px;border:1px solid #ddd;border-top:0;padding:32px 42px;outline:none;font:16px Arial;line-height:1.7;color:#111;background:white}.editor:empty:before{content:attr(data-placeholder);color:#aaa;pointer-events:none}.editor :global(table){border-collapse:collapse;width:100%;margin:15px 0}.editor :global(td){border:1px solid #777;padding:9px;min-width:60px;height:28px}.editor :global(a){color:#2563eb;text-decoration:underline}
-      .notes-bottom{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-top:12px}.hint{font:12px Arial;color:#888}.notes-bottom button{border:0;border-radius:8px;padding:10px 20px;background:#111;color:#fff;cursor:pointer}.status{font:12px Arial;color:#666}
+      .notes-bottom{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-top:12px}.hint{font:12px Arial;color:#888}.notes-bottom button{border:0;border-radius:8px;padding:10px 20px;background:#111;color:#fff;cursor:pointer}.status{font:12px Arial;color:#666}.library-link{display:block;width:max-content;margin:34px auto 0;color:#111;font:14px Arial;text-decoration:none;border-bottom:1px solid #999;padding-bottom:3px}.library-link:hover{border-color:#111}
       @media(max-width:700px){.notes-page{padding:100px 8px 70px}.notes-card{padding:18px;border-radius:12px}.notes-heading{align-items:center}.notes-card h1{font-size:24px}.privacy-toggle span{display:none}.editor{padding:22px 18px;min-height:500px}.hint{display:none}.toolbar{gap:2px}.toolbar button,.toolbar select,.toolbar label{height:29px;min-width:28px;padding:3px 5px;font-size:12px}}
     `}</style>
   </SiteChrome>;
