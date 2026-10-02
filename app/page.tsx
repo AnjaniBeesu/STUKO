@@ -54,14 +54,16 @@ export default function HomePage() {
         <p className="options-kicker">welcome, {username}</p>
         <h1 className="picker-title">lets start grademaxxing</h1>
         <p className="picker-subtitle">start studying</p>
-        <div className="options-row" aria-label="study options">
-          {options.map((option) => <Link key={option.href} href={option.href} className="option-chip">{option.label}</Link>)}
-        </div>
-        <div className="options-row options-row-extra" aria-label="more study options">
-          {extraOptions.map((option) => <Link key={option.href} href={option.href} className="option-chip">{option.label}</Link>)}
-        </div>
-        <div className="options-row options-row-academic" aria-label="academic calculators">
-          {academicOptions.map((option) => <Link key={option.href} href={option.href} className="option-chip">{option.label}</Link>)}
+        <div className="options-grid" aria-label="study options">
+          <div className="options-row options-row-main">
+            {options.map((option) => <Link key={option.href} href={option.href} className="option-chip">{option.label}</Link>)}
+          </div>
+          <div className="options-row options-row-extra">
+            {extraOptions.map((option) => <Link key={option.href} href={option.href} className="option-chip">{option.label}</Link>)}
+          </div>
+          <div className="options-row options-row-academic">
+            {academicOptions.map((option) => <Link key={option.href} href={option.href} className="option-chip">{option.label}</Link>)}
+          </div>
         </div>
       </section>
       <HomeStyles />
@@ -75,13 +77,26 @@ function HomeStyles() {
     .options-kicker { margin: 0 0 26px; font-family: 'Courier New', Courier, monospace; font-size: 14px; line-height: 1.2; letter-spacing: .17em; }
     .picker-title { margin: 0; max-width: 1060px; font-size: clamp(58px, 5.9vw, 94px); font-weight: 400; line-height: .98; letter-spacing: -.065em; }
     .picker-subtitle { margin: 28px 0 0; font-size: 20px; line-height: 1.2; letter-spacing: -.025em; }
-    .options-row { width: 100%; margin-top: 55px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px 14px; }
-    .options-row-extra, .options-row-academic { margin-top: 14px; }
-    .option-chip { appearance: none; display: inline-flex; align-items: center; justify-content: center; padding: 12px 21px 13px; border: 1px solid rgba(40,40,40,.20); border-radius: 999px; background: rgba(255,255,255,.14); color: #111; cursor: pointer; font-size: 18px; line-height: 1; letter-spacing: -.025em; text-decoration: none; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 180ms ease; }
+
+    /* Every row gets the same visual footprint, so the landing page stays balanced. */
+    .options-grid { width: 100%; margin-top: 55px; display: grid; gap: 12px; }
+    .options-row { width: 100%; min-height: 52px; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 12px; align-items: stretch; }
+    .options-row-extra { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .options-row-academic { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .option-chip { appearance: none; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 12px 14px 13px; border: 1px solid rgba(40,40,40,.20); border-radius: 999px; background: rgba(255,255,255,.14); color: #111; cursor: pointer; font-size: 18px; line-height: 1; letter-spacing: -.025em; text-decoration: none; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 180ms ease; }
     .option-chip:hover { background: rgba(255,255,255,.34); border-color: rgba(20,20,20,.35); transform: translateY(-1px); }
     .stuko-dark .option-chip { border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.08); color: #f5f5f5; }
     .stuko-dark .option-chip:hover { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.38); }
     .stuko-home-loader { position: relative; z-index: 2; min-height: calc(100svh - 142px); display: grid; place-items: center; color: var(--page-text); font-size: 32px; }
-    @media (max-width:600px) { .stuko-home-options { width: min(100% - 24px,1060px); min-height: calc(100svh - 160px); padding-top: 138px; padding-bottom: 120px; } .picker-title { font-size: clamp(45px,13vw,70px); } }
-  `}</style>`;
+
+    @media (max-width: 760px) {
+      .stuko-home-options { width: min(100% - 24px, 1060px); min-height: calc(100svh - 160px); padding-top: 138px; padding-bottom: 120px; }
+      .picker-title { font-size: clamp(45px, 13vw, 70px); }
+      .options-grid { gap: 10px; }
+      .options-row { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; min-height: 0; gap: 10px; }
+      .option-chip { min-height: 48px; font-size: 16px; }
+      .options-row-main { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+      .options-row-academic { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    }
+  `}</style>;
 }
