@@ -11,7 +11,7 @@ type Profile = { username?: string };
 
 const options = [
   { label: 'pomodoro timer', href: '/pomodoro' },
-  { label: 'enter study room', href: '/study-room' },
+  { label: 'enter study room · coming soon', href: '/study-room' },
   { label: 'flashcards maker', href: '/flashcards' },
   { label: 'quiz maker', href: '/quiz' },
   { label: 'summarizer', href: '/summarizer' },
