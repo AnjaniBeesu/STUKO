@@ -8,7 +8,7 @@ type Card = { question: string; answer: string };
 type QuizQuestion = { question: string; options: string[]; answer: string };
 
 export default function StudyToolPage({ title, description }: { title: string; description: string }) {
-  const kind: ToolKind = title.includes('flashcard') ? 'flashcards' : title.includes('quiz') ? 'quiz' : 'summary';
+  const kind: ToolKind = title.toLowerCase().includes('flashcard') ? 'flashcards' : title.toLowerCase().includes('quiz') ? 'quiz' : 'summary';
   const [fileName, setFileName] = useState('');
   const [sourceText, setSourceText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -35,8 +35,8 @@ export default function StudyToolPage({ title, description }: { title: string; d
     setBusy(true); setError(''); setCards([]); setQuiz([]); setSummary('');
     try {
       if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) throw new Error('Please upload a PDF file.');
-      // @ts-ignore pdfjs-dist browser ESM entry may vary by installed package version.
-      const pdfjs: any = await import('pdfjs-dist/legacy/build/pdf.mjs');
+      const pdfjs: typeof import('pdfjs-dist/legacy/build/pdf.mjs') = await import('pdfjs-dist/legacy/build/pdf.mjs');
+      pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.149/pdf.worker.min.mjs';
       const pdf = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
       const pages: string[] = [];
       for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
@@ -72,9 +72,7 @@ export default function StudyToolPage({ title, description }: { title: string; d
           {error && <div className="tool-error">{error}</div>}
 
           {kind === 'flashcards' && cards.length > 0 && <div className="result-panel"><div className="result-heading"><div><span>generated from your PDF</span><h2>{cards.length} flashcards</h2></div><button onClick={() => generate(sourceText)}>regenerate</button></div><div className="cards-grid">{cards.map((card, i) => <button key={`${card.question}-${i}`} type="button" className="study-card" onClick={() => setShowAnswer(v => ({ ...v, [i]: !v[i] }))}><span className="card-number">{String(i + 1).padStart(2, '0')}</span><strong>{showAnswer[i] ? card.answer : card.question}</strong><small>{showAnswer[i] ? 'click to see question' : 'click to reveal answer'}</small></button>)}</div></div>}
-
           {kind === 'quiz' && quiz.length > 0 && <div className="result-panel"><div className="result-heading"><div><span>generated from your PDF</span><h2>{quiz.length} practice questions</h2></div><button onClick={() => generate(sourceText)}>regenerate</button></div><div className="quiz-list">{quiz.map((q, i) => <article className="quiz-item" key={`${q.question}-${i}`}><span className="card-number">Q{i + 1}</span><h3>{q.question}</h3><div className="quiz-options">{q.options.map(option => <button key={option} type="button" onClick={e => { e.currentTarget.dataset.correct = String(option === q.answer); }}>{option}</button>)}</div><small className="quiz-answer">Answer: {q.answer}</small></article>)}</div></div>}
-
           {kind === 'summary' && summary && <div className="result-panel"><div className="result-heading"><div><span>generated from your PDF</span><h2>revision summary</h2></div><button onClick={() => generate(sourceText)}>regenerate</button></div><div className="summary-text">{summary.split(/(?<=[.!?])\s+/).map((sentence, i) => <p key={i}>{sentence}</p>)}</div></div>}
         </div>
       </section>
