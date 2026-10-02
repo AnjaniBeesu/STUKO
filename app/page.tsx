@@ -25,6 +25,11 @@ const extraOptions = [
   { label: 'upload pdf · word · ppt + annotate', href: '/document-reader' },
 ];
 
+const academicOptions = [
+  { label: 'attendance calculator + tracker', href: '/attendance' },
+  { label: 'SGPA / CGPA calculator + predictor', href: '/sgpa-cgpa' },
+];
+
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState('');
@@ -55,6 +60,9 @@ export default function HomePage() {
         <div className="options-row options-row-extra" aria-label="more study options">
           {extraOptions.map((option) => <Link key={option.href} href={option.href} className="option-chip">{option.label}</Link>)}
         </div>
+        <div className="options-row options-row-academic" aria-label="academic calculators">
+          {academicOptions.map((option) => <Link key={option.href} href={option.href} className="option-chip">{option.label}</Link>)}
+        </div>
       </section>
       <HomeStyles />
     </SiteChrome>
@@ -69,6 +77,7 @@ function HomeStyles() {
     .picker-subtitle { margin: 28px 0 0; font-size: 20px; line-height: 1.2; letter-spacing: -.025em; }
     .options-row { width: 100%; margin-top: 55px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px 14px; }
     .options-row-extra { margin-top: 14px; }
+    .options-row-academic { margin-top: 14px; }
     .option-chip { appearance: none; display: inline-flex; align-items: center; justify-content: center; padding: 12px 21px 13px; border: 1px solid rgba(40,40,40,.20); border-radius: 999px; background: rgba(255,255,255,.14); color: #111; cursor: pointer; font-size: 18px; line-height: 1; letter-spacing: -.025em; text-decoration: none; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 180ms ease; }
     .option-chip:hover { background: rgba(255,255,255,.34); border-color: rgba(20,20,20,.35); transform: translateY(-1px); }
     .stuko-dark .option-chip { border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.08); color: #f5f5f5; }
