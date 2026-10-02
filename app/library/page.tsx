@@ -1,5 +1,125 @@
-import StudyToolPage from '@/components/study-tool-page';
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
+import SiteChrome from '@/app/components/SiteChrome';
+
+type ItemType = 'note' | 'flashcard' | 'quiz' | 'card';
+type LibraryItem = { id: string; title: string; type: ItemType; updatedAt: string; folderId?: string; public?: boolean; body?: string };
+type Folder = { id: string; name: string };
+
+const ITEM_KEYS: Record<ItemType, string> = { note: 'stuko-saved-notes', flashcard: 'stuko-saved-flashcards', quiz: 'stuko-saved-quizzes', card: 'stuko-saved-cards' };
+const FOLDERS_KEY = 'stuko-library-folders';
+
+function readItems(type: ItemType): LibraryItem[] {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(ITEM_KEYS[type]) || '[]');
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((item: any, index: number) => ({
+      id: String(item.id ?? `${type}-${index}`),
+      title: String(item.title ?? item.name ?? `${type} ${index + 1}`),
+      type,
+      updatedAt: String(item.updatedAt ?? item.createdAt ?? new Date(0).toISOString()),
+      folderId: item.folderId,
+      public: item.public,
+      body: typeof item.body === 'string' ? item.body : '',
+    }));
+  } catch { return []; }
+}
 
 export default function LibraryPage() {
-  return <StudyToolPage title="your library" description="Your saved study material, cards, quizzes, and summaries will live here." />;
+  const [items, setItems] = useState<LibraryItem[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [activeFolder, setActiveFolder] = useState('all');
+  const [filter, setFilter] = useState<'all' | ItemType>('all');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const refresh = () => {
+    const all = (Object.keys(ITEM_KEYS) as ItemType[]).flatMap(readItems).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    setItems(all);
+    try { const parsed = JSON.parse(localStorage.getItem(FOLDERS_KEY) || '[]'); setFolders(Array.isArray(parsed) ? parsed : []); } catch { setFolders([]); }
+  };
+
+  useEffect(() => {
+    refresh();
+    const onStorage = () => refresh();
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('stuko-library-updated', onStorage);
+    return () => { window.removeEventListener('storage', onStorage); window.removeEventListener('stuko-library-updated', onStorage); };
+  }, []);
+
+  const createFolder = () => {
+    const name = window.prompt('folder name')?.trim();
+    if (!name) return;
+    const folder = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name };
+    const next = [...folders, folder];
+    localStorage.setItem(FOLDERS_KEY, JSON.stringify(next));
+    setFolders(next); setActiveFolder(folder.id);
+  };
+
+  const renameFolder = (folder: Folder) => {
+    const name = window.prompt('rename folder', folder.name)?.trim();
+    if (!name) return;
+    const next = folders.map(f => f.id === folder.id ? { ...f, name } : f);
+    localStorage.setItem(FOLDERS_KEY, JSON.stringify(next)); setFolders(next);
+  };
+
+  const deleteFolder = (folder: Folder) => {
+    if (!window.confirm(`delete the folder “${folder.name}”? items will stay in your library.`)) return;
+    const next = folders.filter(f => f.id !== folder.id);
+    localStorage.setItem(FOLDERS_KEY, JSON.stringify(next)); setFolders(next);
+    if (activeFolder === folder.id) setActiveFolder('all');
+  };
+
+  const moveItem = (item: LibraryItem) => {
+    const choices = [{ id: '', name: 'unfiled' }, ...folders];
+    const selected = window.prompt(`move “${item.title}” to:\n${choices.map((f, i) => `${i + 1}. ${f.name}`).join('\n')}`, '1');
+    const index = Number(selected) - 1;
+    if (!Number.isInteger(index) || !choices[index]) return;
+    try {
+      const key = ITEM_KEYS[item.type];
+      const parsed = JSON.parse(localStorage.getItem(key) || '[]');
+      const next = Array.isArray(parsed) ? parsed.map((x: any) => String(x.id) === item.id ? { ...x, folderId: choices[index].id } : x) : parsed;
+      localStorage.setItem(key, JSON.stringify(next)); refresh();
+    } catch {}
+  };
+
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return items.filter(item => {
+      const typeOK = filter === 'all' || item.type === filter;
+      const folderOK = activeFolder === 'all' || (activeFolder === 'unfiled' ? !item.folderId : item.folderId === activeFolder);
+      const searchOK = !q || item.title.toLowerCase().includes(q) || (item.body || '').toLowerCase().includes(q);
+      return typeOK && folderOK && searchOK;
+    });
+  }, [items, filter, activeFolder, search]);
+
+  return <SiteChrome>
+    <main className="library-page"><section className="library-card">
+      <div className="library-heading"><div><p className="kicker">your study desk</p><h1>library</h1><p className="sub">everything you make, kept in one place.</p></div><div className="heading-actions"><Link href="/notes">＋ new note</Link><button onClick={createFolder}>＋ folder</button></div></div>
+      <div className="library-layout">
+        <aside className="folders">
+          <button className={activeFolder === 'all' ? 'active' : ''} onClick={() => setActiveFolder('all')}>all items <span>{items.length}</span></button>
+          <button className={activeFolder === 'unfiled' ? 'active' : ''} onClick={() => setActiveFolder('unfiled')}>unfiled</button>
+          <div className="folder-title">folders</div>
+          {folders.map(folder => <div className="folder-row" key={folder.id}><button className={activeFolder === folder.id ? 'active' : ''} onClick={() => setActiveFolder(folder.id)}>📁 {folder.name}</button><span className="folder-actions"><button onClick={() => renameFolder(folder)}>⋯</button><button onClick={() => deleteFolder(folder)}>×</button></span></div>)}
+          {!folders.length && <p className="empty-folder">create folders to organise your study material.</p>}
+        </aside>
+        <div className="library-main">
+          <div className="library-toolbar"><div className="filters">{(['all','note','flashcard','quiz','card'] as const).map(value => <button key={value} className={filter === value ? 'selected' : ''} onClick={() => setFilter(value)}>{value === 'all' ? 'all' : `${value}s`}</button>)}</div><button className="search-toggle" onClick={() => setSearchOpen(v => !v)}>⌕ search notes</button></div>
+          {searchOpen && <input autoFocus className="library-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="search your saved study material..." />}
+          <div className="items">{visible.map(item => { const folder = folders.find(f => f.id === item.folderId); return <article className="library-item" key={`${item.type}-${item.id}`}><div className="item-icon">{item.type === 'note' ? '✎' : item.type === 'flashcard' ? '▣' : item.type === 'quiz' ? '?' : '▤'}</div><div className="item-info"><h2>{item.title}</h2><p>{item.type}{folder ? ` · ${folder.name}` : ' · unfiled'}{item.public ? ' · public' : ''}</p></div><div className="item-actions"><small>{item.updatedAt === new Date(0).toISOString() ? '' : new Date(item.updatedAt).toLocaleDateString()}</small><button onClick={() => moveItem(item)}>move</button></div></article>; })}{!visible.length && <div className="empty"><strong>nothing here yet.</strong><span>Save a note, flashcard, quiz, or card and it will appear here automatically.</span></div>}</div>
+        </div>
+      </div>
+    </section></main>
+    <style jsx>{`
+      .library-page{min-height:calc(100svh - 150px);padding:125px 20px 100px;color:var(--page-text)}
+      .library-card{width:min(1180px,100%);margin:0 auto;padding:34px;box-sizing:border-box;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:22px}
+      .library-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:25px;border-bottom:1px solid var(--line);padding-bottom:26px}.kicker{font:11px monospace;letter-spacing:.16em;text-transform:uppercase;margin:0 0 5px;opacity:.65}.library-heading h1{font-size:48px;font-weight:400;letter-spacing:-.06em;margin:0}.sub{margin:8px 0 0;opacity:.58}.heading-actions{display:flex;gap:8px}.heading-actions a,.heading-actions button{border:1px solid var(--line);background:var(--page-text);color:var(--page-bg);border-radius:999px;padding:10px 15px;text-decoration:none;font:13px Arial;cursor:pointer}
+      .library-layout{display:grid;grid-template-columns:210px 1fr;gap:28px;padding-top:28px}.folders{border-right:1px solid var(--line);padding-right:20px}.folders>button,.folder-row>button{width:100%;border:0;background:transparent;color:inherit;text-align:left;padding:10px;border-radius:8px;cursor:pointer;font:14px Arial}.folders>button.active,.folder-row>button.active{background:rgba(127,127,127,.15);font-weight:600}.folders>button span{float:right;opacity:.45}.folder-title{font:10px monospace;text-transform:uppercase;letter-spacing:.14em;opacity:.45;margin:24px 10px 8px}.folder-row{display:flex;align-items:center;gap:2px}.folder-row>button{flex:1}.folder-actions{display:flex}.folder-actions button{border:0;background:transparent;color:inherit;cursor:pointer;opacity:.45;padding:4px}.empty-folder{font:12px Arial;line-height:1.5;opacity:.45;padding:8px}
+      .library-toolbar{display:flex;justify-content:space-between;gap:15px;align-items:center}.filters{display:flex;gap:4px;flex-wrap:wrap}.filters button,.search-toggle{border:1px solid var(--line);background:transparent;color:inherit;border-radius:999px;padding:8px 12px;font:12px Arial;cursor:pointer}.filters button.selected{background:var(--page-text);color:var(--page-bg)}.library-search{width:100%;box-sizing:border-box;margin:14px 0 0;padding:13px 16px;border:1px solid var(--line);border-radius:12px;background:transparent;color:inherit;font:14px Arial;outline:none}.items{display:grid;gap:9px;margin-top:18px}.library-item{display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--line);border-radius:13px;background:rgba(127,127,127,.05)}.item-icon{width:38px;height:38px;border-radius:10px;background:rgba(127,127,127,.12);display:grid;place-items:center;font-size:18px}.item-info{min-width:0;flex:1}.item-info h2{font:17px Georgia;margin:0 0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.item-info p{font:11px Arial;opacity:.5;margin:0}.item-actions{display:flex;align-items:center;gap:10px}.item-actions small{opacity:.45;font:11px Arial}.item-actions button{border:1px solid var(--line);background:transparent;color:inherit;border-radius:7px;padding:6px 9px;cursor:pointer;font:11px Arial}.empty{padding:70px 20px;text-align:center;border:1px dashed var(--line);border-radius:15px;display:grid;gap:8px;opacity:.65}.empty span{font:13px Arial}
+      @media(max-width:760px){.library-page{padding:100px 8px 70px}.library-card{padding:18px;border-radius:13px}.library-heading{align-items:flex-start;flex-direction:column}.library-heading h1{font-size:38px}.heading-actions{width:100%}.heading-actions a,.heading-actions button{flex:1;text-align:center}.library-layout{grid-template-columns:1fr}.folders{border-right:0;border-bottom:1px solid var(--line);padding:0 0 15px;display:flex;gap:5px;overflow:auto}.folders>button{min-width:max-content}.folder-title,.empty-folder,.folder-row{display:none}.library-toolbar{align-items:flex-start;flex-direction:column}.item-actions small{display:none}}
+    `}</style>
+  </SiteChrome>;
 }
