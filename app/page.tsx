@@ -11,23 +11,23 @@ type Profile = { username?: string };
 
 const options = [
   { label: 'pomodoro timer', href: '/pomodoro' },
-  { label: 'enter study room · coming soon', href: '/study-room' },
-  { label: 'flashcards maker', href: '/flashcards' },
-  { label: 'quiz maker', href: '/quiz' },
+  { label: 'study room', href: '/study-room' },
+  { label: 'flashcards', href: '/flashcards' },
+  { label: 'quiz', href: '/quiz' },
   { label: 'summarizer', href: '/summarizer' },
-  { label: 'your library', href: '/library' },
+  { label: 'library', href: '/library' },
 ];
 
 const extraOptions = [
   { label: 'exam mode', href: '/exam-mode' },
-  { label: 'make notes & save notes', href: '/notes' },
-  { label: 'search other peoples notes', href: '/note-search' },
-  { label: 'upload pdf · word · ppt + annotate', href: '/document-reader' },
+  { label: 'notes', href: '/notes' },
+  { label: 'search', href: '/note-search' },
+  { label: 'upload', href: '/document-reader' },
 ];
 
 const academicOptions = [
-  { label: 'attendance calculator + tracker', href: '/attendance' },
-  { label: 'SGPA / CGPA calculator + predictor', href: '/sgpa-cgpa' },
+  { label: 'attendance calc', href: '/attendance' },
+  { label: 'cgpa calc', href: '/sgpa-cgpa' },
 ];
 
 export default function HomePage() {
@@ -76,13 +76,12 @@ function HomeStyles() {
     .picker-title { margin: 0; max-width: 1060px; font-size: clamp(58px, 5.9vw, 94px); font-weight: 400; line-height: .98; letter-spacing: -.065em; }
     .picker-subtitle { margin: 28px 0 0; font-size: 20px; line-height: 1.2; letter-spacing: -.025em; }
     .options-row { width: 100%; margin-top: 55px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px 14px; }
-    .options-row-extra { margin-top: 14px; }
-    .options-row-academic { margin-top: 14px; }
+    .options-row-extra, .options-row-academic { margin-top: 14px; }
     .option-chip { appearance: none; display: inline-flex; align-items: center; justify-content: center; padding: 12px 21px 13px; border: 1px solid rgba(40,40,40,.20); border-radius: 999px; background: rgba(255,255,255,.14); color: #111; cursor: pointer; font-size: 18px; line-height: 1; letter-spacing: -.025em; text-decoration: none; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 180ms ease; }
     .option-chip:hover { background: rgba(255,255,255,.34); border-color: rgba(20,20,20,.35); transform: translateY(-1px); }
     .stuko-dark .option-chip { border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.08); color: #f5f5f5; }
     .stuko-dark .option-chip:hover { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.38); }
     .stuko-home-loader { position: relative; z-index: 2; min-height: calc(100svh - 142px); display: grid; place-items: center; color: var(--page-text); font-size: 32px; }
     @media (max-width:600px) { .stuko-home-options { width: min(100% - 24px,1060px); min-height: calc(100svh - 160px); padding-top: 138px; padding-bottom: 120px; } .picker-title { font-size: clamp(45px,13vw,70px); } }
-  `}</style>;
+  `}</style>`;
 }
