@@ -35,7 +35,7 @@ export default function StudyToolPage({ title, description }: { title: string; d
     setBusy(true); setError(''); setCards([]); setQuiz([]); setSummary('');
     try {
       if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) throw new Error('Please upload a PDF file.');
-      // @ts-expect-error pdfjs-dist 5.x does not ship declarations for this ESM browser entry.
+      // @ts-ignore pdfjs-dist browser ESM entry may vary by installed package version.
       const pdfjs: any = await import('pdfjs-dist/legacy/build/pdf.mjs');
       const pdf = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
       const pages: string[] = [];
